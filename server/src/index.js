@@ -1,16 +1,18 @@
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.js";
-import foodRoutes from "./routes/food.js";
+const dotenv = require("dotenv");
+const connectDB = require("./db");
+const app = require("./app");
 
+// Load environment variables from .env file
 dotenv.config();
-connectDB();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(express.json());
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/food", foodRoutes);
+// Connect to MongoDB
+connectDB()
+.then(() => {
+    app.listen(process.env.PORT || 8000, () => {
+        console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
+    })
+})
+.catch((error) => {
+    console.error("Error connecting to MongoDB !!!", error);
+    process.exit(1); // Exit the process with an error code
+});
