@@ -1,0 +1,27 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "food delivery application",
+  "license": "ISC",
+  "author": "Adarsh Paritosh",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "seed:admin": "node scripts/seedAdmin.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.1",
+    "nodemailer": "^10.0.10",
+    "nodemon": "^3.1.14",
+    "zod": "^4.6.5"
+  }
+}
