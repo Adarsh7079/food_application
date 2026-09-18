@@ -54,9 +54,18 @@ const loginSchema = z.object({
   password: z.string().min(1).max(72),
 });
 
+const verifyEmailSchema = z.object({
+  token: z.string().regex(/^[a-f\d]{64}$/i, "Invalid verification token"),
+});
+
+const resendVerificationSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
 const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   phoneNumber: phoneNumber.optional(),
+  address: z.string().trim().min(5).max(300).nullable().optional(),
   profileImage: z.url().max(2048).nullable().optional(),
 }).refine((data) => Object.keys(data).length > 0, {
   message: "Provide at least one field to update",
@@ -151,6 +160,8 @@ module.exports = {
   userSchema,
   registerSchema,
   loginSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
   updateProfileSchema,
   updateUserSchema,
   restaurantSchema,

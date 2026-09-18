@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { USER_ROLE, USER_STATUS } = require("../utils/constants");
-const { userSchema: userInputSchema } = require("../validations/schemas");
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -57,53 +56,28 @@ const userSchema = new mongoose.Schema({
         default: null,
         trim: true,
         match: [/^\+?[1-9]\d{7,14}$/, "Please fill a valid phone number"],
+    },
+    emailVerificationToken: {
+        type: String,
+        select: false,
+    },
+    emailVerificationExpires: {
+        type: Date,
+        select: false,
+    },
+    emailVerifiedAt: {
+        type: Date,
+        default: null,
     }
 }, {timestamps: true});
 
-// Zod normalizes input (for example, email casing) and provides consistent
-// validation messages before Mongoose writes the document to the database.
-userSchema.pre("validate", function () {
-    const input = {
-        name: this.name,
-        email: this.email,
-        phoneNumber: this.phoneNumber || undefined,
-        address: this.address || undefined,
-        profileImage: this.profileImage,
-        role: this.role,
-        userStatus: this.userStatus,
-    };
-
-    if (this.isModified("password")) {
-        input.password = this.password;
-    }
-
-    const schema = this.isModified("password")
-        ? userInputSchema
-        : userInputSchema.partial({ password: true });
-    const result = schema.safeParse(input);
-
-    if (!result.success) {
-        for (const issue of result.error.issues) {
-            this.invalidate(issue.path.join(".") || "user", issue.message);
-        }
+// Pre-save hook to hash the password before saving
+userSchema.pre("save", async function() {
+    if (!this.isModified("password")) {
         return;
     }
-
-    Object.assign(this, result.data);
-});
-
-// Pre-save hook to hash the password before saving
-userSchema.pre("save", async function(next) {
-    if (!this.isModified("password")) {
-        return next();
-    }
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Method to compare passwords
