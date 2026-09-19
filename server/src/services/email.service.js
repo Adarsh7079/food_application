@@ -17,12 +17,7 @@ const getTransporter = () => {
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
-  const serverUrl = process.env.SERVER_URL;
-  if (!serverUrl) {
-    const error = new Error("SERVER_URL is required to create verification links.");
-    error.statusCode = 500;
-    throw error;
-  }
+  const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 8000}`;
 
   const verificationUrl = new URL("/api/v1/auth/verify-email", serverUrl);
   verificationUrl.searchParams.set("token", token);

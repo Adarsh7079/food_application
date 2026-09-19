@@ -5,6 +5,9 @@ const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 
 const sendError = (res, error) => {
+  if (!error.statusCode) {
+    console.error("Authentication request failed:", error);
+  }
   const apiError = error instanceof ApiError
     ? error
     : new ApiError(
@@ -16,10 +19,12 @@ const sendError = (res, error) => {
 };
 
 const signup = async (req, res) => {
+   
   try {
+      
     const user = await userService.createUser(req.validated.body);
     const token = await userService.createEmailVerificationToken(user);
-    await  ({ email: user.email, name: user.name, token });
+    await sendVerificationEmail({ email: user.email, name: user.name, token });
 
     return res.status(201).json(new ApiResponse(
       201,
