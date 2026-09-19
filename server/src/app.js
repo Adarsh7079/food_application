@@ -23,6 +23,7 @@ app.use(cookieParser())
 
 
 //routes declaration
+
 app.use("/api/v1/auth", authRouter);
 
 
