@@ -1,30 +1,43 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const authRouter = require("./routes/auth.route");
 
+const authRouter = require("./routes/auth.route");
 
 const app = express();
 
-// Middleware
+// ================================
+// MIDDLEWARE
+// ================================
 
-app.use(cors({
+app.use(
+  cors({
     origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+    credentials: true,
+  }),
+);
 
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
+app.use(
+  express.json({
+    limit: "16kb",
+  }),
+);
 
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "16kb",
+  }),
+);
 
-//routes import
+app.use(express.static("public"));
 
+app.use(cookieParser());
 
-//routes declaration
+// ================================
+// ROUTES
+// ================================
 
 app.use("/api/v1/auth", authRouter);
-
 
 module.exports = app;

@@ -62,25 +62,29 @@ const resendVerificationSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
 
-const updateProfileSchema = z.object({
-  name: z.string().trim().min(2).max(80).optional(),
-  phoneNumber: phoneNumber.optional(),
-  address: z.string().trim().min(5).max(300).nullable().optional(),
-  profileImage: z.url().max(2048).nullable().optional(),
-}).refine((data) => Object.keys(data).length > 0, {
-  message: "Provide at least one field to update",
-});
+const updateProfileSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80).optional(),
+    phoneNumber: phoneNumber.optional(),
+    address: z.string().trim().min(5).max(300).nullable().optional(),
+    profileImage: z.url().max(2048).nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Provide at least one field to update",
+  });
 
-const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(80).optional(),
-  phoneNumber: phoneNumber.optional(),
-  address: z.string().trim().min(5).max(300).nullable().optional(),
-  profileImage: z.url().max(2048).nullable().optional(),
-  role: z.enum(Object.values(USER_ROLE)).optional(),
-  userStatus: z.enum(Object.values(USER_STATUS)).optional(),
-}).refine((data) => Object.keys(data).length > 0, {
-  message: "Provide at least one field to update",
-});
+const updateUserSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80).optional(),
+    phoneNumber: phoneNumber.optional(),
+    address: z.string().trim().min(5).max(300).nullable().optional(),
+    profileImage: z.url().max(2048).nullable().optional(),
+    role: z.enum(Object.values(USER_ROLE)).optional(),
+    userStatus: z.enum(Object.values(USER_STATUS)).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Provide at least one field to update",
+  });
 
 const restaurantSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -89,24 +93,36 @@ const restaurantSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   address: addressSchema,
   cuisineTypes: z.array(z.string().trim().min(2).max(40)).min(1).max(8),
-  openingTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM format"),
-  closingTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM format"),
+  openingTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM format"),
+  closingTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM format"),
 });
 
-const foodItemSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  description: z.string().trim().min(10).max(1000).optional(),
-  category: z.string().trim().min(2).max(50),
-  price: z.coerce.number().finite().nonnegative().max(1000000),
-  discountPrice: z.coerce.number().finite().nonnegative().max(1000000).optional(),
-  isVegetarian: z.boolean().default(false),
-  isAvailable: z.boolean().default(true),
-  preparationTimeMinutes: z.coerce.number().int().min(1).max(300).optional(),
-  images: z.array(z.url().max(2048)).min(1).max(5),
-}).refine(
-  (data) => data.discountPrice === undefined || data.discountPrice <= data.price,
-  { path: ["discountPrice"], message: "Discount price cannot exceed price" }
-);
+const foodItemSchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    description: z.string().trim().min(10).max(1000).optional(),
+    category: z.string().trim().min(2).max(50),
+    price: z.coerce.number().finite().nonnegative().max(1000000),
+    discountPrice: z.coerce
+      .number()
+      .finite()
+      .nonnegative()
+      .max(1000000)
+      .optional(),
+    isVegetarian: z.boolean().default(false),
+    isAvailable: z.boolean().default(true),
+    preparationTimeMinutes: z.coerce.number().int().min(1).max(300).optional(),
+    images: z.array(z.url().max(2048)).min(1).max(5),
+  })
+  .refine(
+    (data) =>
+      data.discountPrice === undefined || data.discountPrice <= data.price,
+    { path: ["discountPrice"], message: "Discount price cannot exceed price" },
+  );
 
 const cartItemSchema = z.object({
   foodItemId: objectId,
@@ -114,39 +130,49 @@ const cartItemSchema = z.object({
   specialInstructions: z.string().trim().max(300).optional(),
 });
 
-const orderSchema = z.object({
-  restaurantId: objectId,
-  items: z.array(cartItemSchema).min(1).max(30),
-  deliveryAddress: addressSchema,
-  paymentMethod: z.enum(["COD", "CARD", "UPI", "WALLET"]),
-  specialInstructions: z.string().trim().max(500).optional(),
-}).superRefine((data, context) => {
-  const duplicateFoodItems = new Set();
-  for (const item of data.items) {
-    if (duplicateFoodItems.has(item.foodItemId)) {
+const orderSchema = z
+  .object({
+    restaurantId: objectId,
+    items: z.array(cartItemSchema).min(1).max(30),
+    deliveryAddress: addressSchema,
+    paymentMethod: z.enum(["COD", "CARD", "UPI", "WALLET"]),
+    specialInstructions: z.string().trim().max(500).optional(),
+  })
+  .superRefine((data, context) => {
+    const duplicateFoodItems = new Set();
+    for (const item of data.items) {
+      if (duplicateFoodItems.has(item.foodItemId)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["items"],
+          message: "Each food item may appear only once in an order",
+        });
+        break;
+      }
+      duplicateFoodItems.add(item.foodItemId);
+    }
+  });
+
+const updateOrderStatusSchema = z
+  .object({
+    status: z.enum([
+      "CONFIRMED",
+      "PREPARING",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "CANCELLED",
+    ]),
+    cancellationReason: z.string().trim().min(3).max(300).optional(),
+  })
+  .superRefine((data, context) => {
+    if (data.status === "CANCELLED" && !data.cancellationReason) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["items"],
-        message: "Each food item may appear only once in an order",
+        path: ["cancellationReason"],
+        message: "A cancellation reason is required",
       });
-      break;
     }
-    duplicateFoodItems.add(item.foodItemId);
-  }
-});
-
-const updateOrderStatusSchema = z.object({
-  status: z.enum(["CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]),
-  cancellationReason: z.string().trim().min(3).max(300).optional(),
-}).superRefine((data, context) => {
-  if (data.status === "CANCELLED" && !data.cancellationReason) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["cancellationReason"],
-      message: "A cancellation reason is required",
-    });
-  }
-});
+  });
 
 const idParamSchema = z.object({ id: objectId });
 const paginationSchema = z.object({

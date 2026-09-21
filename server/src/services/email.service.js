@@ -3,7 +3,9 @@ const nodemailer = require("nodemailer");
 const getTransporter = () => {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    const error = new Error("SMTP settings are missing. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS.");
+    const error = new Error(
+      "SMTP settings are missing. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS.",
+    );
     error.statusCode = 500;
     throw error;
   }
@@ -17,7 +19,8 @@ const getTransporter = () => {
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
-  const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 8000}`;
+  const serverUrl =
+    process.env.SERVER_URL || `http://localhost:${process.env.PORT || 8000}`;
 
   const verificationUrl = new URL("/api/v1/auth/verify-email", serverUrl);
   verificationUrl.searchParams.set("token", token);

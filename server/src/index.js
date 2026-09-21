@@ -1,18 +1,20 @@
 const dotenv = require("dotenv");
+
+// Load environment variables FIRST
+dotenv.config();
+
 const connectDB = require("./db");
 const app = require("./app");
 
-// Load environment variables from .env file
-dotenv.config();
-
 // Connect to MongoDB
 connectDB()
-.then(() => {
+  .then(() => {
     app.listen(process.env.PORT || 8000, () => {
-        console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
-    })
-})
-.catch((error) => {
+      console.log(`⚙️ Server is running at port : ${process.env.PORT || 8000}`);
+    });
+  })
+  .catch((error) => {
     console.error("Error connecting to MongoDB !!!", error);
-    process.exit(1); // Exit the process with an error code
-});
+
+    process.exit(1);
+  });
