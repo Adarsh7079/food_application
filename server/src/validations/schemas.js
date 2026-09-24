@@ -181,6 +181,71 @@ const paginationSchema = z.object({
   search: z.string().trim().max(100).optional(),
 });
 
+const restaurantRegistrationSchema = z.object({
+  name: z.string().trim().min(2).max(150),
+
+  description: z.string().trim().max(1000).optional(),
+
+  email: z.string().trim().toLowerCase().email(),
+
+  phoneNumber: phoneNumber.optional(),
+
+  logo: z.url().max(2048).nullable().optional(),
+
+  address: z.string().trim().min(5).max(300),
+
+  cuisineTypes: z
+    .array(z.string().trim().min(2).max(50))
+    .min(1)
+    .max(10),
+
+  openingTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid opening time")
+    .optional(),
+
+  closingTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid closing time")
+    .optional(),
+});
+
+const updateRestaurantSchema = z
+  .object({
+    name: z.string().trim().min(2).max(150).optional(),
+
+    description: z.string().trim().max(1000).nullable().optional(),
+
+    phoneNumber: phoneNumber.nullable().optional(),
+
+    logo: z.url().max(2048).nullable().optional(),
+
+    address: z.string().trim().min(5).max(300).optional(),
+
+    cuisineTypes: z
+      .array(z.string().trim().min(2).max(50))
+      .min(1)
+      .max(10)
+      .optional(),
+
+    openingTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid opening time")
+      .nullable()
+      .optional(),
+
+    closingTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid closing time")
+      .nullable()
+      .optional(),
+
+    isOpen: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Provide at least one field to update",
+  });
+
 module.exports = {
   addressSchema,
   userSchema,
@@ -197,4 +262,5 @@ module.exports = {
   updateOrderStatusSchema,
   idParamSchema,
   paginationSchema,
+  updateRestaurantSchema
 };
