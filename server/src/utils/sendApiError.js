@@ -13,6 +13,8 @@ const sendApiError = (res, error, context = "Request failed") => {
   if (isDuplicateKeyError) {
     statusCode = 409;
     message = "Unable to complete the request with the provided details.";
+  } else if (statusCode === 409) {
+    message = "Unable to complete the request with the provided details.";
   } else if (isZodError) {
     statusCode = 422;
     message = "Validation failed";
