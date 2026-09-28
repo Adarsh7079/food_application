@@ -39,10 +39,11 @@ const createUser = async (payload) => {
     return await User.create(userData);
   } catch (error) {
     if (error.code === 11000) {
-      throw createServiceError(
-        "An account with this email already exists",
-        409,
-      );
+      const existingUser = await User.findOne({ email: userData.email });
+
+      if (existingUser?.userStatus === USER_STATUS.pending) {
+        return existingUser;
+      }
     }
 
     throw error;

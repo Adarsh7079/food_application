@@ -1,4 +1,4 @@
-const ApiError = require("../utils/ApiError");
+const sendApiError = require("../utils/sendApiError");
 
 const validate =
   (schema, target = "body") =>
@@ -6,16 +6,7 @@ const validate =
     const result = schema.safeParse(req[target]);
 
     if (!result.success) {
-      return res.status(422).json(
-        new ApiError(
-          422,
-          "Validation failed",
-          result.error.issues.map((issue) => ({
-            field: issue.path.join(".") || target,
-            message: issue.message,
-          })),
-        ),
-      );
+      return sendApiError(res, result.error);
     }
 
     req.validated = { ...(req.validated || {}), [target]: result.data };

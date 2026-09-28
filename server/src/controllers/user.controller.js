@@ -1,36 +1,7 @@
 const userService = require("../services/user.service");
 
-const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
-
-// ========================================
-// ERROR HANDLER
-// ========================================
-
-const sendError = (res, error) => {
-  if (!error.statusCode) {
-    console.error("User request failed:", error);
-  }
-
-  const apiError =
-    error instanceof ApiError
-      ? error
-      : new ApiError(
-          error.statusCode || 500,
-
-          error.statusCode ? error.message : "Unable to process the request",
-
-          error.name === "ZodError" ? error.issues : [],
-        );
-
-  return res.status(apiError.statusCode).json({
-    statusCode: apiError.statusCode,
-    success: false,
-    message: apiError.message,
-    data: null,
-    errors: apiError.errors || [],
-  });
-};
+const sendApiError = require("../utils/sendApiError");
 
 // ========================================
 // GET PROFILE
@@ -44,7 +15,7 @@ const getProfile = async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, user, "Profile fetched successfully"));
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "User request failed");
   }
 };
 
@@ -63,7 +34,7 @@ const updateProfile = async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, user, "Profile updated successfully"));
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "User request failed");
   }
 };
 

@@ -1,29 +1,19 @@
 const jwt = require("jsonwebtoken");
+const ApiError = require("../utils/ApiError");
+const sendApiError = require("../utils/sendApiError");
 
 const authenticate = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({
-                statusCode: 401,
-                success: false,
-                message: "Authentication required",
-                data: null,
-                errors: [],
-            });
+            return sendApiError(res, new ApiError(401, "Authentication required"));
         }
 
         const token = authHeader.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({
-                statusCode: 401,
-                success: false,
-                message: "Access token is missing",
-                data: null,
-                errors: [],
-            });
+            return sendApiError(res, new ApiError(401, "Access token is missing"));
         }
 
         const decoded = jwt.verify(
@@ -38,35 +28,7 @@ const authenticate = (req, res, next) => {
 
         next();
     } catch (error) {
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({
-                statusCode: 401,
-                success: false,
-                message: "Access token expired",
-                data: null,
-                errors: [],
-            });
-        }
-
-        if (error.name === "JsonWebTokenError") {
-            return res.status(401).json({
-                statusCode: 401,
-                success: false,
-                message: "Invalid access token",
-                data: null,
-                errors: [],
-            });
-        }
-
-        console.error("Authentication error:", error);
-
-        return res.status(401).json({
-            statusCode: 401,
-            success: false,
-            message: "Authentication failed",
-            data: null,
-            errors: [],
-        });
+        return sendApiError(res, error, "Authentication failed");
     }
 };
 

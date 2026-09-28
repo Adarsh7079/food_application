@@ -9,35 +9,11 @@ const { sendVerificationEmail } = require("../services/email.service");
 
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
+const sendApiError = require("../utils/sendApiError");
 
 // ========================================
 // ERROR HANDLER
 // ========================================
-
-const sendError = (res, error) => {
-  if (!error.statusCode) {
-    console.error("Authentication request failed:", error);
-  }
-
-  const apiError =
-    error instanceof ApiError
-      ? error
-      : new ApiError(
-          error.statusCode || 500,
-
-          error.statusCode ? error.message : "Unable to process the request",
-
-          error.name === "ZodError" ? error.issues : [],
-        );
-
-  return res.status(apiError.statusCode).json({
-    statusCode: apiError.statusCode,
-    success: false,
-    message: apiError.message,
-    data: null,
-    errors: apiError.errors || [],
-  });
-};
 
 // ========================================
 // SIGNUP
@@ -55,17 +31,26 @@ const signup = async (req, res) => {
       token,
     });
 
-    return res
-      .status(201)
-      .json(
-        new ApiResponse(
-          201,
-          null,
-          "Signup successful. Please check your email to verify your account.",
-        ),
-      );
+    return res.status(202).json(
+      new ApiResponse(
+        202,
+        null,
+        "If the email can be registered, a verification email will be sent.",
+      ),
+    );
   } catch (error) {
-    return sendError(res, error);
+    if (error.statusCode === 500) {
+      return sendApiError(
+        res,
+        new ApiError(
+          503,
+          "Unable to send the verification email. Please retry registration or request a new verification email.",
+        ),
+        "Signup request failed",
+      );
+    }
+
+    return sendApiError(res, error, "Signup request failed");
   }
 };
 
@@ -87,7 +72,7 @@ const verifyEmail = async (req, res) => {
         ),
       );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Email verification failed");
   }
 };
 
@@ -113,7 +98,7 @@ const resendVerificationEmail = async (req, res) => {
         new ApiResponse(200, null, "A new verification email has been sent."),
       );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Resend verification request failed");
   }
 };
 
@@ -182,7 +167,7 @@ const login = async (req, res) => {
       ),
     );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Login request failed");
   }
 };
 
@@ -258,7 +243,7 @@ const refreshAccessToken = async (req, res) => {
       ),
     );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Refresh token request failed");
   }
 };
 
@@ -304,7 +289,7 @@ const logout = async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, null, "Logout successful"));
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Logout request failed");
   }
 };
 

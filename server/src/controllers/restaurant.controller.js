@@ -1,29 +1,6 @@
 const restaurantService = require("../services/restaurant.service");
-const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
-
-const sendError = (res, error) => {
-  if (!error.statusCode) {
-    console.error("Restaurant request failed:", error);
-  }
-
-  const apiError =
-    error instanceof ApiError
-      ? error
-      : new ApiError(
-          error.statusCode || 500,
-          error.statusCode ? error.message : "Unable to process the request",
-          error.name === "ZodError" ? error.issues : [],
-        );
-
-  return res.status(apiError.statusCode).json({
-    statusCode: apiError.statusCode,
-    success: false,
-    message: apiError.message,
-    data: null,
-    errors: apiError.errors || [],
-  });
-};
+const sendApiError = require("../utils/sendApiError");
 
 const createRestaurant = async (req, res) => {
   try {
@@ -38,7 +15,7 @@ const createRestaurant = async (req, res) => {
         new ApiResponse(201, restaurant, "Restaurant created successfully"),
       );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Restaurant request failed");
   }
 };
 
@@ -52,7 +29,7 @@ const getMyRestaurant = async (req, res) => {
         new ApiResponse(200, restaurant, "Restaurant fetched successfully"),
       );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Restaurant request failed");
   }
 };
 
@@ -69,7 +46,7 @@ const updateMyRestaurant = async (req, res) => {
         new ApiResponse(200, restaurant, "Restaurant updated successfully"),
       );
   } catch (error) {
-    return sendError(res, error);
+    return sendApiError(res, error, "Restaurant request failed");
   }
 };
 
