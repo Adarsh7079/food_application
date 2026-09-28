@@ -1,30 +1,53 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const authRouter = require("./routes/auth.route");
 
+const authRouter = require("./routes/auth.route");
+const userRouter = require("./routes/user.route");
+const restaurantRouter = require("./routes/restaurant.route");
+const sendApiError = require("./utils/sendApiError");
 
 const app = express();
 
-// Middleware
+// ================================
+// MIDDLEWARE
+// ================================
 
-app.use(cors({
+app.use(
+  cors({
     origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+    credentials: true,
+  }),
+);
 
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
+app.use(
+  express.json({
+    limit: "16kb",
+  }),
+);
 
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "16kb",
+  }),
+);
 
-//routes import
+app.use(express.static("public"));
 
+app.use(cookieParser());
 
-//routes declaration
+// ================================
+// ROUTES
+// ================================
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/user", userRouter);
+app.use("/api/v1/restaurants", restaurantRouter);
 
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  return sendApiError(res, error, `${req.method} ${req.originalUrl} failed`);
+});
 
 module.exports = app;
