@@ -35,15 +35,17 @@ const parseUserId = (id) => idParamSchema.parse({ id }).id;
 const createUser = async (payload) => {
   const userData = registerSchema.parse(payload);
 
+  const existingUser = await User.findOne({ email: userData.email });
+
+  if (existingUser) {
+    throw createServiceError("An account with this email already exists.", 409);
+  }
+
   try {
     return await User.create(userData);
   } catch (error) {
     if (error.code === 11000) {
-      const existingUser = await User.findOne({ email: userData.email });
-
-      if (existingUser?.userStatus === USER_STATUS.pending) {
-        return existingUser;
-      }
+      throw createServiceError("An account with this email already exists.", 409);
     }
 
     throw error;
