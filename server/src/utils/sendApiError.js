@@ -12,9 +12,11 @@ const sendApiError = (res, error, context = "Request failed") => {
 
   if (isDuplicateKeyError) {
     statusCode = 409;
-    message = "Unable to complete the request with the provided details.";
-  } else if (statusCode === 409) {
-    message = "Unable to complete the request with the provided details.";
+    const duplicateFields = Object.keys(error.keyPattern || error.keyValue || {});
+    message =
+      duplicateFields.includes("email")
+        ? "An account with this email already exists."
+        : "A record with the provided details already exists.";
   } else if (isZodError) {
     statusCode = 422;
     message = "Validation failed";

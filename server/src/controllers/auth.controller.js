@@ -35,7 +35,7 @@ const signup = async (req, res) => {
       new ApiResponse(
         202,
         null,
-        "If the email can be registered, a verification email will be sent.",
+        "Account created successfully. Check your email to verify your account.",
       ),
     );
   } catch (error) {
