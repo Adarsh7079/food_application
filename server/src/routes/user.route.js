@@ -11,11 +11,11 @@ const { updateProfileSchema } = require("../validations/schemas");
 const router = express.Router();
 
 // Get current logged-in user
-router.get("/profile", authenticate, userController.getProfile);
+router.get("/me", authenticate, userController.getProfile);
 
 // Update current logged-in user
 router.patch(
-  "/profile",
+  "/me",
   authenticate,
   validate(updateProfileSchema),
   userController.updateProfile,

@@ -45,7 +45,10 @@ const createUser = async (payload) => {
     return await User.create(userData);
   } catch (error) {
     if (error.code === 11000) {
-      throw createServiceError("An account with this email already exists.", 409);
+      throw createServiceError(
+        "An account with this email already exists.",
+        409,
+      );
     }
 
     throw error;
@@ -141,7 +144,7 @@ const authenticateUser = async (email, password) => {
 
   const user = await User.findOne({
     email: credentials.email,
-  }).select("+password");
+  }).select("+password +authTokenVersion");
 
   if (!user || !(await user.isValidPassword(credentials.password))) {
     throw createServiceError("Invalid email or password", 401);

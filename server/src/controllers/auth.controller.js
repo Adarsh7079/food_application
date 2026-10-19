@@ -31,13 +31,15 @@ const signup = async (req, res) => {
       token,
     });
 
-    return res.status(202).json(
-      new ApiResponse(
-        202,
-        null,
-        "Account created successfully. Check your email to verify your account.",
-      ),
-    );
+    return res
+      .status(202)
+      .json(
+        new ApiResponse(
+          202,
+          null,
+          "Account created successfully. Check your email to verify your account.",
+        ),
+      );
   } catch (error) {
     if (error.statusCode === 500) {
       return sendApiError(
@@ -195,7 +197,7 @@ const refreshAccessToken = async (req, res) => {
     const user = await User.findOne({
       _id: decoded.userId,
       refreshToken: refreshTokenHash,
-    }).select("+refreshToken");
+    }).select("+refreshToken +authTokenVersion");
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
@@ -255,25 +257,11 @@ const logout = async (req, res) => {
   try {
     const cookieName = process.env.REFRESH_TOKEN_COOKIE_NAME || "refreshToken";
 
-    const refreshToken = req.cookies[cookieName];
-
-    if (refreshToken) {
-      const refreshTokenHash = crypto
-        .createHash("sha256")
-        .update(refreshToken)
-        .digest("hex");
-
-      await User.findOneAndUpdate(
-        {
-          refreshToken: refreshTokenHash,
-        },
-        {
-          $unset: {
-            refreshToken: 1,
-          },
-        },
-      );
-    }
+    // Revoke both the refresh token and all access tokens issued before logout.
+    await User.findByIdAndUpdate(req.user.userId, {
+      $inc: { authTokenVersion: 1 },
+      $unset: { refreshToken: 1 },
+    });
 
     res.clearCookie(cookieName, {
       httpOnly: true,

@@ -12,11 +12,12 @@ const sendApiError = (res, error, context = "Request failed") => {
 
   if (isDuplicateKeyError) {
     statusCode = 409;
-    const duplicateFields = Object.keys(error.keyPattern || error.keyValue || {});
-    message =
-      duplicateFields.includes("email")
-        ? "An account with this email already exists."
-        : "A record with the provided details already exists.";
+    const duplicateFields = Object.keys(
+      error.keyPattern || error.keyValue || {},
+    );
+    message = duplicateFields.includes("email")
+      ? "An account with this email already exists."
+      : "A record with the provided details already exists.";
   } else if (isZodError) {
     statusCode = 422;
     message = "Validation failed";
@@ -26,7 +27,8 @@ const sendApiError = (res, error, context = "Request failed") => {
     }));
   } else if (isJwtError) {
     statusCode = 401;
-    message = error.name === "TokenExpiredError" ? "Token expired" : "Invalid token";
+    message =
+      error.name === "TokenExpiredError" ? "Token expired" : "Invalid token";
   } else if (statusCode >= 500 && statusCode !== 503) {
     message = "Unable to process the request";
   } else if (!message) {

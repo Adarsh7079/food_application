@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema(
                     enum: [
                         USER_ROLE.customer,
                         USER_ROLE.admin,
+                        USER_ROLE.superAdmin,
                         USER_ROLE.delivery,
                         USER_ROLE.restaurant,
                     ],
@@ -93,6 +94,13 @@ const userSchema = new mongoose.Schema(
             type: String,
             select: false,
         },
+
+        // Incremented on logout to revoke previously issued access tokens.
+        authTokenVersion: {
+            type: Number,
+            default: 0,
+            select: false,
+        },
     },
     {
         timestamps: true,
@@ -130,6 +138,7 @@ userSchema.methods.generateAccessToken = function () {
         {
             userId: this._id.toString(),
             roles: this.roles,
+            tokenVersion: this.authTokenVersion || 0,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
