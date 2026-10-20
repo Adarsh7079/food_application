@@ -5,7 +5,17 @@ const ApiError = require("../src/utils/ApiError");
 const ApiResponse = require("../src/utils/ApiResponse");
 const sendApiError = require("../src/utils/sendApiError");
 const User = require("../src/models/user.model");
+const Restaurant = require("../src/models/restaurant.model");
 const userService = require("../src/services/user.service");
+const restaurantService = require("../src/services/restaurant.service");
+const {
+  RESTAURANT_OPERATIONAL_STATUS,
+  RESTAURANT_STATUS,
+} = require("../src/utils/constants");
+const {
+  reviewRestaurantSchema,
+  updateRestaurantSuspensionSchema,
+} = require("../src/validations/schemas");
 
 const createResponse = () => ({
   statusCode: null,
@@ -105,4 +115,95 @@ test("success responses retain their endpoint-specific message", () => {
       "Account created successfully. Check your email to verify your account.",
     ),
   );
+});
+
+test("restaurant review requires a reason when rejecting", () => {
+  assert.equal(
+    reviewRestaurantSchema.safeParse({
+      approvalStatus: RESTAURANT_STATUS.rejected,
+    }).success,
+    false,
+  );
+  assert.equal(
+    reviewRestaurantSchema.safeParse({
+      approvalStatus: RESTAURANT_STATUS.rejected,
+      rejectionReason: "Missing business information",
+    }).success,
+    true,
+  );
+});
+
+test("restaurant suspension requires a reason and records the super admin", async () => {
+  const originalFindOne = Restaurant.findOne;
+  const restaurant = {
+    approvalStatus: RESTAURANT_STATUS.approved,
+    operationalStatus: RESTAURANT_OPERATIONAL_STATUS.active,
+    async save() {},
+  };
+  Restaurant.findOne = async () => restaurant;
+
+  try {
+    assert.equal(
+      updateRestaurantSuspensionSchema.safeParse({
+        isSuspended: true,
+      }).success,
+      false,
+    );
+
+    await restaurantService.updateRestaurantSuspension(
+      "restaurant-id",
+      "admin-id",
+      true,
+      "Administrative review",
+    );
+
+    assert.equal(restaurant.approvalStatus, RESTAURANT_STATUS.suspended);
+    assert.equal(
+      restaurant.operationalStatus,
+      RESTAURANT_OPERATIONAL_STATUS.inactive,
+    );
+    assert.equal(restaurant.suspensionReason, "Administrative review");
+    assert.equal(restaurant.suspendedBy, "admin-id");
+    assert.ok(restaurant.suspendedAt instanceof Date);
+  } finally {
+    Restaurant.findOne = originalFindOne;
+  }
+});
+
+test("unsuspending returns the restaurant to pending and inactive", async () => {
+  const originalFindOne = Restaurant.findOne;
+  const restaurant = {
+    approvalStatus: RESTAURANT_STATUS.suspended,
+    operationalStatus: RESTAURANT_OPERATIONAL_STATUS.inactive,
+    suspensionReason: "Administrative review",
+    suspendedAt: new Date(),
+    suspendedBy: "admin-id",
+    reviewedBy: "admin-id",
+    reviewedAt: new Date(),
+    approvedAt: new Date(),
+    async save() {},
+  };
+  Restaurant.findOne = async () => restaurant;
+
+  try {
+    await restaurantService.updateRestaurantSuspension(
+      "restaurant-id",
+      "admin-id",
+      false,
+    );
+
+    assert.equal(restaurant.approvalStatus, RESTAURANT_STATUS.pending);
+    assert.equal(
+      restaurant.operationalStatus,
+      RESTAURANT_OPERATIONAL_STATUS.inactive,
+    );
+    assert.equal(restaurant.suspensionReason, null);
+    assert.equal(restaurant.suspendedAt, null);
+    assert.equal(restaurant.suspendedBy, null);
+    assert.equal(restaurant.reviewedBy, null);
+    assert.equal(restaurant.reviewedAt, null);
+    assert.equal(restaurant.approvedAt, null);
+  } finally {
+    Restaurant.findOne = originalFindOne;
+  }
 });

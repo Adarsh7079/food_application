@@ -167,6 +167,122 @@ const getMyRestaurant = async (userId) => {
 };
 
 // ========================================
+// ADMINISTRATIVE RESTAURANT MANAGEMENT
+// ========================================
+
+const getAdminRestaurants = async (approvalStatus) => {
+  const filter = { isDeleted: { $ne: true } };
+
+  if (approvalStatus) {
+    filter.approvalStatus = approvalStatus;
+  }
+
+  return Restaurant.find(filter)
+    .populate("owner", "name email")
+    .sort({ createdAt: -1 });
+};
+
+const getAdminRestaurantById = async (restaurantId) => {
+  const restaurant = await Restaurant.findOne({
+    _id: restaurantId,
+    isDeleted: { $ne: true },
+  }).populate("owner", "name email");
+
+  if (!restaurant) {
+    throw new ApiError(STATUS_CODES.NOT_FOUND, "Restaurant not found");
+  }
+
+  return restaurant;
+};
+
+const reviewRestaurant = async (
+  restaurantId,
+  reviewerId,
+  approvalStatus,
+  rejectionReason,
+) => {
+  const restaurant = await Restaurant.findOne({
+    _id: restaurantId,
+    isDeleted: { $ne: true },
+  });
+
+  if (!restaurant) {
+    throw new ApiError(STATUS_CODES.NOT_FOUND, "Restaurant not found");
+  }
+
+  if (restaurant.approvalStatus === RESTAURANT_STATUS.suspended) {
+    throw new ApiError(
+      STATUS_CODES.FORBIDDEN,
+      "A suspended restaurant must be unsuspended before it can be reviewed",
+    );
+  }
+
+  const now = new Date();
+  restaurant.approvalStatus = approvalStatus;
+  restaurant.reviewedBy = reviewerId;
+  restaurant.reviewedAt = now;
+  restaurant.approvedAt =
+    approvalStatus === RESTAURANT_STATUS.approved ? now : null;
+  restaurant.rejectionReason =
+    approvalStatus === RESTAURANT_STATUS.rejected ? rejectionReason : null;
+
+  if (approvalStatus === RESTAURANT_STATUS.rejected) {
+    restaurant.operationalStatus = RESTAURANT_OPERATIONAL_STATUS.inactive;
+  }
+
+  await restaurant.save();
+
+  return restaurant;
+};
+
+const updateRestaurantSuspension = async (
+  restaurantId,
+  adminId,
+  isSuspended,
+  reason,
+) => {
+  const restaurant = await Restaurant.findOne({
+    _id: restaurantId,
+    isDeleted: { $ne: true },
+  });
+
+  if (!restaurant) {
+    throw new ApiError(STATUS_CODES.NOT_FOUND, "Restaurant not found");
+  }
+
+  if (isSuspended) {
+    if (restaurant.approvalStatus === RESTAURANT_STATUS.suspended) {
+      throw new ApiError(STATUS_CODES.BAD_REQUEST, "Restaurant is already suspended");
+    }
+
+    restaurant.approvalStatus = RESTAURANT_STATUS.suspended;
+    restaurant.operationalStatus = RESTAURANT_OPERATIONAL_STATUS.inactive;
+    restaurant.suspensionReason = reason;
+    restaurant.suspendedAt = new Date();
+    restaurant.suspendedBy = adminId;
+  } else {
+    if (restaurant.approvalStatus !== RESTAURANT_STATUS.suspended) {
+      throw new ApiError(STATUS_CODES.BAD_REQUEST, "Restaurant is not suspended");
+    }
+
+    // Require a fresh approval after a suspension is lifted.
+    restaurant.approvalStatus = RESTAURANT_STATUS.pending;
+    restaurant.operationalStatus = RESTAURANT_OPERATIONAL_STATUS.inactive;
+    restaurant.suspensionReason = null;
+    restaurant.suspendedAt = null;
+    restaurant.suspendedBy = null;
+    restaurant.rejectionReason = null;
+    restaurant.reviewedBy = null;
+    restaurant.reviewedAt = null;
+    restaurant.approvedAt = null;
+  }
+
+  await restaurant.save();
+
+  return restaurant;
+};
+
+// ========================================
 // UPDATE MY RESTAURANT
 // ========================================
 
@@ -331,6 +447,10 @@ const updateOperationalStatus = async (
 module.exports = {
   createRestaurant,
   getMyRestaurant,
+  getAdminRestaurants,
+  getAdminRestaurantById,
+  reviewRestaurant,
+  updateRestaurantSuspension,
   updateMyRestaurant,
   updateOperationalStatus,
 };

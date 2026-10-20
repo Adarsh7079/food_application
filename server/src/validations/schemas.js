@@ -2,6 +2,7 @@ const { z } = require("zod");
 const {
   USER_ROLE,
   USER_STATUS,
+  RESTAURANT_STATUS,
   RESTAURANT_OPERATIONAL_STATUS,
 } = require("../utils/constants");
 
@@ -187,6 +188,7 @@ const updateOrderStatusSchema = z
   });
 
 const idParamSchema = z.object({ id: objectId });
+const restaurantIdParamSchema = z.object({ restaurantId: objectId });
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -220,6 +222,46 @@ const updateOperationalStatusSchema = z.object({
   operationalStatus: z.enum(Object.values(RESTAURANT_OPERATIONAL_STATUS)),
 });
 
+const listAdminRestaurantsSchema = z.object({
+  approvalStatus: z.enum(Object.values(RESTAURANT_STATUS)).optional(),
+});
+
+const reviewRestaurantSchema = z
+  .object({
+    approvalStatus: z.enum([
+      RESTAURANT_STATUS.approved,
+      RESTAURANT_STATUS.rejected,
+    ]),
+    rejectionReason: z.string().trim().min(3).max(500).optional(),
+  })
+  .superRefine((data, context) => {
+    if (
+      data.approvalStatus === RESTAURANT_STATUS.rejected &&
+      !data.rejectionReason
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rejectionReason"],
+        message: "A rejection reason is required",
+      });
+    }
+  });
+
+const updateRestaurantSuspensionSchema = z
+  .object({
+    isSuspended: z.boolean(),
+    reason: z.string().trim().min(3).max(500).optional(),
+  })
+  .superRefine((data, context) => {
+    if (data.isSuspended && !data.reason) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reason"],
+        message: "A suspension reason is required",
+      });
+    }
+  });
+
 module.exports = {
   addressSchema,
   restaurantAddressSchema,
@@ -236,8 +278,12 @@ module.exports = {
   orderSchema,
   updateOrderStatusSchema,
   idParamSchema,
+  restaurantIdParamSchema,
   paginationSchema,
   restaurantRegistrationSchema,
   updateRestaurantSchema,
   updateOperationalStatusSchema,
+  listAdminRestaurantsSchema,
+  reviewRestaurantSchema,
+  updateRestaurantSuspensionSchema,
 };
