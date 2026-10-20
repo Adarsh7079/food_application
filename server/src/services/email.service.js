@@ -10,7 +10,7 @@ const getResendClient = () => {
   if (!apiKey) {
     throw new ApiError(
       503,
-      "Email delivery is not configured. Contact the site administrator."
+      "Email delivery is not configured. Contact the site administrator.",
     );
   }
 
@@ -23,7 +23,7 @@ const sendVerificationEmail = async ({ email, name, token }) => {
   if (!serverUrl && process.env.NODE_ENV === "production") {
     throw new ApiError(
       503,
-      "Email verification is not configured correctly. Contact the site administrator."
+      "Email verification is not configured correctly. Contact the site administrator.",
     );
   }
 
@@ -41,17 +41,14 @@ const sendVerificationEmail = async ({ email, name, token }) => {
 
     const verificationUrl = new URL(
       "/api/v1/auth/verify-email",
-      parsedServerUrl
+      parsedServerUrl,
     );
     verificationUrl.searchParams.set("token", token);
 
     const templateId = process.env.RESEND_TEMPLATE_ID;
 
     if (!templateId) {
-      throw new ApiError(
-        503,
-        "Email verification template is not configured."
-      );
+      throw new ApiError(503, "Email verification template is not configured.");
     }
 
     const resend = getResendClient();
@@ -90,9 +87,61 @@ const sendVerificationEmail = async ({ email, name, token }) => {
 
     throw new ApiError(
       503,
-      "Unable to send the verification email. Please retry or request a new verification email."
+      "Unable to send the verification email. Please retry or request a new verification email.",
     );
   }
 };
 
-module.exports = { sendVerificationEmail };
+const sendRestaurantApprovalNotification = async ({ restaurant, owner }) => {
+  const email = process.env.SUPER_ADMIN_EMAIL;
+
+  if (!email) {
+    console.error("Restaurant approval email not sent: SUPER_ADMIN_EMAIL is not configured.");
+    return null;
+  }
+
+  try {
+    const resend = getResendClient();
+    const address = restaurant.address;
+  const location = [
+    address?.street,
+    address?.city,
+    address?.state,
+    address?.postalCode,
+    address?.country,
+  ]
+      .filter(Boolean)
+      .join(", ");
+    const { data, error } = await resend.emails.send({
+      from: process.env.MAIL_FROM || DEFAULT_FROM,
+      to: [email],
+      subject: `Restaurant approval requested: ${restaurant.name}`,
+      text: [
+        `A restaurant is waiting for approval.`,
+        `Restaurant: ${restaurant.name}`,
+        `Owner: ${owner.name} (${owner.email})`,
+        `Location: ${location || "Not provided"}`,
+        `Restaurant ID: ${restaurant._id}`,
+      ].join("\n"),
+    });
+
+    if (error) {
+      console.error("Resend restaurant approval email failed:", {
+        name: error.name,
+        message: error.message,
+      });
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    // Keep restaurant registration successful; the pending restaurant remains
+    // available for review even if the notification provider is unavailable.
+    console.error("Restaurant approval email delivery failed:", {
+      message: error.message,
+    });
+    return null;
+  }
+};
+
+module.exports = { sendVerificationEmail, sendRestaurantApprovalNotification };

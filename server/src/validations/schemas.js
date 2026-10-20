@@ -1,11 +1,23 @@
 const { z } = require("zod");
-const { USER_ROLE, USER_STATUS } = require("../utils/constants");
+const {
+  USER_ROLE,
+  USER_STATUS,
+  RESTAURANT_OPERATIONAL_STATUS,
+} = require("../utils/constants");
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid resource id");
 const phoneNumber = z
   .string()
   .trim()
   .regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid phone number");
+
+const restaurantAddressSchema = z.object({
+  street: z.string().trim().min(2).max(120),
+  city: z.string().trim().min(2).max(60),
+  state: z.string().trim().min(2).max(60),
+  postalCode: z.string().trim().min(3).max(12),
+  country: z.string().trim().min(2).max(60),
+});
 
 const addressSchema = z.object({
   label: z.string().trim().min(2).max(30).optional(),
@@ -182,72 +194,35 @@ const paginationSchema = z.object({
 });
 
 const restaurantRegistrationSchema = z.object({
-  name: z.string().trim().min(2).max(150),
-
+  name: z.string().trim().min(2).max(100),
   description: z.string().trim().max(1000).optional(),
-
-  email: z.string().trim().toLowerCase().email(),
-
-  phoneNumber: phoneNumber.optional(),
-
+  contactPhone: phoneNumber.optional(),
+  address: restaurantAddressSchema,
   logo: z.url().max(2048).nullable().optional(),
-
-  address: z.string().trim().min(5).max(300),
-
-  cuisineTypes: z
-    .array(z.string().trim().min(2).max(50))
-    .min(1)
-    .max(10),
-
-  openingTime: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid opening time")
-    .optional(),
-
-  closingTime: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid closing time")
-    .optional(),
+  coverImage: z.url().max(2048).nullable().optional(),
 });
 
 const updateRestaurantSchema = z
   .object({
-    name: z.string().trim().min(2).max(150).optional(),
-
+    restaurantId: objectId,
+    name: z.string().trim().min(2).max(100).optional(),
     description: z.string().trim().max(1000).nullable().optional(),
-
-    phoneNumber: phoneNumber.nullable().optional(),
-
+    contactPhone: phoneNumber.nullable().optional(),
+    address: restaurantAddressSchema.optional(),
     logo: z.url().max(2048).nullable().optional(),
-
-    address: z.string().trim().min(5).max(300).optional(),
-
-    cuisineTypes: z
-      .array(z.string().trim().min(2).max(50))
-      .min(1)
-      .max(10)
-      .optional(),
-
-    openingTime: z
-      .string()
-      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid opening time")
-      .nullable()
-      .optional(),
-
-    closingTime: z
-      .string()
-      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid closing time")
-      .nullable()
-      .optional(),
-
-    isOpen: z.boolean().optional(),
+    coverImage: z.url().max(2048).nullable().optional(),
   })
-  .refine((data) => Object.keys(data).length > 0, {
+  .refine((data) => Object.keys(data).some((key) => key !== "restaurantId"), {
     message: "Provide at least one field to update",
   });
 
+const updateOperationalStatusSchema = z.object({
+  operationalStatus: z.enum(Object.values(RESTAURANT_OPERATIONAL_STATUS)),
+});
+
 module.exports = {
   addressSchema,
+  restaurantAddressSchema,
   userSchema,
   registerSchema,
   loginSchema,
@@ -262,5 +237,7 @@ module.exports = {
   updateOrderStatusSchema,
   idParamSchema,
   paginationSchema,
-  updateRestaurantSchema
+  restaurantRegistrationSchema,
+  updateRestaurantSchema,
+  updateOperationalStatusSchema,
 };

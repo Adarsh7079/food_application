@@ -10,7 +10,7 @@
     "test": "node --test",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "seed:admin": "node scripts/seedAdmin.js"
+    "seed:admin": "node src/scripts/seedadmin.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

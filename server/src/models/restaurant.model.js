@@ -1,74 +1,144 @@
 const mongoose = require("mongoose");
 
+const {
+  RESTAURANT_STATUS,
+  RESTAURANT_OPERATIONAL_STATUS,
+} = require("../utils/constants");
+
 const restaurantSchema = new mongoose.Schema(
   {
-    ownerId: {
+    // Basic restaurant information
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      default: "",
+    },
+
+    // Restaurant owner
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
 
-    name: {
+    // Contact information
+    contactPhone: {
       type: String,
-      required: true,
       trim: true,
-      minlength: 2,
-      maxlength: 150,
-    },
-
-    description: {
-      type: String,
       default: null,
-      trim: true,
-      maxlength: 1000,
-    },
-
-    email: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
-
-    phoneNumber: {
-      type: String,
-      default: null,
-      trim: true,
     },
 
     address: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    cuisineTypes: [
-      {
+      street: {
         type: String,
+        required: true,
         trim: true,
+        maxlength: 120,
       },
-    ],
+      city: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 60,
+      },
+      state: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 60,
+      },
+      postalCode: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 12,
+      },
+      country: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 60,
+      },
+    },
 
-    openingTime: {
+    // Restaurant images
+    logo: {
       type: String,
       default: null,
     },
 
-    closingTime: {
+    coverImage: {
       type: String,
       default: null,
     },
 
-    isOpen: {
-      type: Boolean,
-      default: false,
+    // Super admin approval
+    approvalStatus: {
+      type: String,
+      enum: Object.values(RESTAURANT_STATUS),
+      default: RESTAURANT_STATUS.pending,
+      index: true,
     },
 
-    status: {
+    rejectionReason: {
       type: String,
-      enum: ["pending", "approved", "rejected", "suspended"],
-      default: "pending",
+      default: null,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Whether the restaurant is accepting orders
+    operationalStatus: {
+      type: String,
+      enum: Object.values(RESTAURANT_OPERATIONAL_STATUS),
+      default: RESTAURANT_OPERATIONAL_STATUS.inactive,
+      index: true,
+    },
+    suspensionReason: {
+      type: String,
+      default: null,
+    },
+
+    suspendedAt: {
+      type: Date,
+      default: null,
+    },
+
+    suspendedBy: {
+      type: require("mongoose").Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
   },
   {
@@ -76,4 +146,12 @@ const restaurantSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model("Restaurant", restaurantSchema);
+// Useful for finding approved restaurants that are active.
+restaurantSchema.index({
+  approvalStatus: 1,
+  operationalStatus: 1,
+});
+
+const Restaurant = mongoose.model("Restaurant", restaurantSchema);
+
+module.exports = Restaurant;

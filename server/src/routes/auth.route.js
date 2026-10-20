@@ -2,6 +2,7 @@ const express = require("express");
 const authController = require("../controllers/auth.controller");
 
 const validate = require("../middlewares/validate");
+const authenticate = require("../middlewares/auth.middleware");
 
 const {
   registerSchema,
@@ -13,7 +14,7 @@ const {
 const router = express.Router();
 
 // Signup
-router.post("/signup", validate(registerSchema), authController.signup);
+router.post("/register", validate(registerSchema), authController.signup);
 
 // Email verification
 router.get(
@@ -36,6 +37,6 @@ router.post("/login", validate(loginSchema), authController.login);
 router.post("/refresh", authController.refreshAccessToken);
 
 // Logout
-router.post("/logout", authController.logout);
+router.post("/logout", authenticate, authController.logout);
 
 module.exports = router;
