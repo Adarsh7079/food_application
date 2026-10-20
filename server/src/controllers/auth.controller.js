@@ -10,6 +10,7 @@ const { sendVerificationEmail } = require("../services/email.service");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const sendApiError = require("../utils/sendApiError");
+const { USER_STATUS } = require("../utils/constants");
 
 // ========================================
 // ERROR HANDLER
@@ -203,7 +204,7 @@ const refreshAccessToken = async (req, res) => {
       throw new ApiError(401, "Invalid refresh token");
     }
 
-    if (user.userStatus !== "approved") {
+    if (user.userStatus !== USER_STATUS.approved) {
       throw new ApiError(403, "Your account is not active");
     }
 
