@@ -1,0 +1,106 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap");
+@import "tailwindcss";
+
+a.active hr {
+  display: block;
+}
+
+:root {
+  color-scheme: light;
+  --brand-green-900: #0d2d22;
+  --brand-green-800: #123d30;
+  --brand-green-700: #1d4d3e;
+  --brand-green-600: #2d6756;
+  --brand-gold: #d9a74a;
+  --brand-gold-soft: #f3d7a1;
+  --brand-cream: #f6eedb;
+  --brand-ivory: #fffaf2;
+  --brand-card: #f2e7cf;
+  --brand-dark: #2a1f1d;
+  --brand-soft: #fffaf3;
+  --brand-red: #c75b3a;
+  --brand-gray-soft: #6f7a67;
+  --brand-orange: #d98f2b;
+  --brand-peach: #f9ebd6;
+  --brand-teal: #1a5e4f;
+  --brand-mustard: #d7a64d;
+}
+
+* {
+  font-family: Outfit;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 8% 0%, rgba(217, 167, 74, 0.12), transparent 34rem),
+    radial-gradient(ellipse at 92% 38%, rgba(45, 103, 86, 0.08), transparent 38rem),
+    linear-gradient(180deg, #f4ebdc 0%, var(--brand-cream) 42%, var(--brand-ivory) 100%);
+  background-attachment: fixed;
+  color: var(--brand-dark);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.site-shell {
+  background: linear-gradient(180deg, rgba(246, 238, 219, 0.96), rgba(249, 244, 234, 0.95));
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(15, 45, 34, 0.08);
+}
+
+img {
+  display: block;
+}
+
+.prata-regular {
+  font-family: "Prata", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  a.active {
+    background-color: var(--brand-green-800);
+    color: var(--brand-ivory);
+    border-radius: 9999px;
+    padding: 0.35rem 0.7rem;
+  }
+}
+
+/* Improve select appearance */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--brand-dark) 50%), linear-gradient(135deg, var(--brand-dark) 50%, transparent 50%);
+  background-position: calc(100% - 1.25rem) calc(1em + 2px), calc(100% - 0.9rem) calc(1em + 2px);
+  background-size: 0.45em 0.45em, 0.45em 0.45em;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
+}
+
+/* Ensure sliding panel appears above other content */
+.sliding-panel {
+  z-index: 50;
+}
