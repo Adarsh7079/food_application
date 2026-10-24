@@ -262,6 +262,28 @@ const updateRestaurantSuspensionSchema = z
     }
   });
 
+const createProductSchema = z.object({
+  name: z.string().trim().min(2).max(150),
+  description: z.string().trim().max(1000).optional(),
+  price: z.coerce.number().finite().positive().max(1000000),
+  category: objectId,
+  image: z.url().max(2048).nullable().optional(),
+  foodType: z.enum(["VEG", "NON_VEG", "EGG"]).default("VEG"),
+});
+
+const publicProductsQuerySchema = z.object({
+  restaurantId: objectId.optional(),
+  category: objectId.optional(),
+});
+
+const productAvailabilitySchema = z.object({
+  restaurantId: objectId,
+  isAvailable: z.boolean(),
+});
+const createCategorySchema = z.object({
+  name: z.string().trim().min(2).max(60),
+});
+
 module.exports = {
   addressSchema,
   restaurantAddressSchema,
@@ -286,4 +308,8 @@ module.exports = {
   listAdminRestaurantsSchema,
   reviewRestaurantSchema,
   updateRestaurantSuspensionSchema,
+  createProductSchema,
+  publicProductsQuerySchema,
+  productAvailabilitySchema,
+  createCategorySchema,
 };
