@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 
 const DEFAULT_FROM = "Zayka Nest <noreply@zaykanest.in>";
 const DEFAULT_SUBJECT = "Verify your email";
+const ORDER_NOTIFICATION_EMAIL = "adarshk8271@gmail.com";
 
 const getResendClient = () => {
   const apiKey = process.env.RESEND_API_KEY;
@@ -15,6 +16,51 @@ const getResendClient = () => {
   }
 
   return new Resend(apiKey);
+};
+
+const getOrderNotificationEmail = () =>
+  process.env.ORDER_NOTIFICATION_EMAIL ||
+  process.env.SUPER_ADMIN_EMAIL ||
+  ORDER_NOTIFICATION_EMAIL;
+
+const sendContactEnquiry = async ({ name, email, phone, message }) => {
+  const recipient =
+    process.env.CONTACT_ENQUIRY_EMAIL ||
+    process.env.SUPER_ADMIN_EMAIL ||
+    ORDER_NOTIFICATION_EMAIL;
+
+  try {
+    const resend = getResendClient();
+    const { data, error } = await resend.emails.send({
+      from: process.env.MAIL_FROM || DEFAULT_FROM,
+      to: [recipient],
+      replyTo: email,
+      subject: "ZaykaNest Enquiry",
+      text: [
+        "A new enquiry was submitted through the ZaykaNest contact form.",
+        `Name: ${name}`,
+        `Email: ${email}`,
+        `Phone: ${phone}`,
+        "",
+        "Message:",
+        message,
+      ].join("\n"),
+    });
+
+    if (error) {
+      console.error("Resend contact enquiry failed:", {
+        name: error.name,
+        message: error.message,
+      });
+      return false;
+    }
+    return Boolean(data);
+  } catch (error) {
+    console.error("Contact enquiry email delivery failed:", {
+      message: error.message,
+    });
+    return false;
+  }
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
@@ -144,4 +190,130 @@ const sendRestaurantApprovalNotification = async ({ restaurant, owner }) => {
   }
 };
 
-module.exports = { sendVerificationEmail, sendRestaurantApprovalNotification };
+const sendOrderNotification = async ({ order, customer }) => {
+  const email = getOrderNotificationEmail();
+
+  try {
+    const resend = getResendClient();
+    const address = order.deliveryAddress;
+    const deliveryAddress = [
+      address.recipientName,
+      address.phoneNumber,
+      address.line1,
+      address.line2,
+      address.city,
+      address.state,
+      address.postalCode,
+      address.country,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const itemLines = order.items
+      .map(
+        (item) =>
+          `${item.name} x ${item.quantity} — ₹${(item.unitPrice * item.quantity).toFixed(2)}`,
+      )
+      .join("\n");
+
+    const { data, error } = await resend.emails.send({
+      from: process.env.MAIL_FROM || DEFAULT_FROM,
+      to: [email],
+      subject: `New order received: ${order._id}`,
+      text: [
+        "A new cash-on-delivery order was placed.",
+        `Order ID: ${order._id}`,
+        `Customer: ${customer.name} (${customer.email})`,
+        `Restaurant: ${order.restaurant?.name || "Restaurant"}`,
+        `Delivery address: ${deliveryAddress}`,
+        "",
+        "Items:",
+        itemLines,
+        "",
+        `Subtotal: ₹${order.subtotal.toFixed(2)}`,
+        `Discount: ₹${order.discount.toFixed(2)}`,
+        `Delivery fee: ₹${order.deliveryFee.toFixed(2)}`,
+        `Total: ₹${order.total.toFixed(2)}`,
+        `Payment: ${order.paymentMethod}`,
+      ].join("\n"),
+    });
+
+    if (error) {
+      console.error("Resend order notification failed:", {
+        name: error.name,
+        message: error.message,
+      });
+      return false;
+    }
+
+    return Boolean(data);
+  } catch (error) {
+    console.error("Order notification email delivery failed:", {
+      message: error.message,
+    });
+    return false;
+  }
+};
+
+const sendWhatsAppOrderNotification = async (checkout) => {
+  const email = getOrderNotificationEmail();
+
+  try {
+    const resend = getResendClient();
+    const subtotal = checkout.items.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity,
+      0,
+    );
+    const discount = subtotal >= 499 ? Math.round(subtotal * 0.25) : 0;
+    const deliveryFee = discount > 0 ? 0 : 40;
+    const itemLines = checkout.items
+      .map(
+        (item) =>
+          `${item.name} x ${item.quantity} — ₹${(item.unitPrice * item.quantity).toFixed(2)}`,
+      )
+      .join("\n");
+    const { data, error } = await resend.emails.send({
+      from: process.env.MAIL_FROM || DEFAULT_FROM,
+      to: [email],
+      subject: "New WhatsApp checkout order",
+      text: [
+        "A customer is being redirected to WhatsApp to confirm this order.",
+        `Customer: ${checkout.customerName} (${checkout.customerEmail})`,
+        `Phone: ${checkout.phoneNumber}`,
+        `Delivery address: ${checkout.deliveryAddress}`,
+        `Location: ${checkout.location || "Not shared; use the delivery address"}`,
+        "",
+        "Items:",
+        itemLines,
+        "",
+        `Subtotal: ₹${subtotal.toFixed(2)}`,
+        `Discount: ₹${discount.toFixed(2)}`,
+        `Delivery fee: ₹${deliveryFee.toFixed(2)}`,
+        `Estimated total: ₹${(subtotal - discount + deliveryFee).toFixed(2)}`,
+        "Payment: Cash on Delivery",
+      ].join("\n"),
+    });
+
+    if (error) {
+      console.error("Resend WhatsApp order notification failed:", {
+        name: error.name,
+        message: error.message,
+      });
+      return false;
+    }
+
+    return Boolean(data);
+  } catch (error) {
+    console.error("WhatsApp order notification email delivery failed:", {
+      message: error.message,
+    });
+    return false;
+  }
+};
+
+module.exports = {
+  sendVerificationEmail,
+  sendRestaurantApprovalNotification,
+  sendOrderNotification,
+  sendWhatsAppOrderNotification,
+  sendContactEnquiry,
+};

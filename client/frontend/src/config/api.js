@@ -1,4 +1,5 @@
-const configuredApiUrl = import.meta.env.VITE_BACKEND_URL || "https://api.zaykanest.in";
+const configuredApiUrl = import.meta.env.VITE_BACKEND_URL ||
+  (import.meta.env.DEV ? "" : "https://api.zaykanest.in");
 
 export const API_BASE_URL = configuredApiUrl.replace(/\/+$/, "");
 // The backend exposes the public products route. Set this to false only for a

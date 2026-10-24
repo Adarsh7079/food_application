@@ -11,17 +11,15 @@ const Product = () => {
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState("");
 
-  const fetchProductData = async () => {
-    products.map((item) => {
-      if (item._id === productId) {
-        setProductData(item);
-        setImage(item.image[0]);
-        return null;
-      }
-    });
-  };
   useEffect(() => {
-    fetchProductData();
+    const selectedProduct = products.find((item) => item._id === productId);
+    setProductData(selectedProduct || false);
+    setImage(
+      Array.isArray(selectedProduct?.image)
+        ? selectedProduct.image[0] || ""
+        : selectedProduct?.image || ""
+    );
+    setSize("");
   }, [productId, products]);
 
   return productData ? (
@@ -61,23 +59,27 @@ const Product = () => {
           <p className="mt-5 text-gray-500 md:w-4/5">
             {productData.description}
           </p>
-          <div className="flex flex-col gap-4 my-8">
-            <p>Select Portion</p>
-            <div className="flex gap-2">
-              {productData.sizes.map((item, index) => (
-                <button
-                  onClick={() => setSize(item)}
-                  className={`border border-gray-300 py-2 px-4 bg-gray-100 ${
-                    item === size ? "bg-orange-500" : ""
-                  }`}
-                  key={index}
-                >
-                  {item}
-                </button>
-              ))}
+          {productData.sizes?.length > 0 && (
+            <div className="my-8 flex flex-col gap-4">
+              <p>Select Portion</p>
+              <div className="flex gap-2">
+                {productData.sizes.map((item) => (
+                  <button
+                    type="button"
+                    onClick={() => setSize(item)}
+                    className={`border border-gray-300 bg-gray-100 px-4 py-2 ${
+                      item === size ? "bg-orange-500" : ""
+                    }`}
+                    key={item}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <button
+            type="button"
             onClick={() => addToCart(productData._id, size)}
             className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700 "
           >

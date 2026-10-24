@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { apiClient as axios } from "../../../lib/apiClient";
+import { toast } from "react-toastify";
+import { apiClient as axios, getApiErrorMessage } from "../../../lib/apiClient";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { PageHeading, SectionCard, StatCard, StatusPill } from "../components/DashboardUI";
@@ -14,6 +15,11 @@ export default function ApiDashboardHome({ role }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const reportError = useCallback((requestError, fallback) => {
+    const message = getApiErrorMessage(requestError, fallback);
+    setError(message);
+    toast.error(message);
+  }, []);
   const load = useCallback(async () => {
     setLoading(true); setError("");
     try {
@@ -38,9 +44,9 @@ export default function ApiDashboardHome({ role }) {
         setRestaurants(allRestaurants);
         setOrders(orderResponse.data.data || []);
       }
-    } catch (requestError) { setError(requestError.response?.data?.message || "Could not load dashboard data."); }
+    } catch (requestError) { reportError(requestError, "Could not load dashboard data."); }
     finally { setLoading(false); }
-  }, [role, token]);
+  }, [reportError, role, token]);
   useEffect(() => { load(); }, [load]);
 
   const toggleRestaurant = async () => {
@@ -49,7 +55,7 @@ export default function ApiDashboardHome({ role }) {
       const operationalStatus = restaurant.operationalStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
       const response = await axios.patch("/api/v1/restaurants/" + restaurant._id + "/operational-status", { operationalStatus }, authConfig(token));
       setRestaurant((current) => ({ ...current, ...response.data.data }));
-    } catch (requestError) { setError(requestError.response?.data?.message || "Could not update restaurant availability."); }
+    } catch (requestError) { reportError(requestError, "Could not update restaurant availability."); }
   };
 
   if (loading) return <div className="py-12 text-sm text-[#798078]">Loading live dashboard…</div>;
@@ -59,8 +65,10 @@ export default function ApiDashboardHome({ role }) {
   if (role === "restaurant") return <><PageHeading eyebrow="Restaurant workspace" title={restaurant.name} description={`${restaurant.address?.city || "Restaurant partner"} · ${restaurant.approvalStatus?.toLowerCase()} approval status`} action={<Link to="/dashboard/restaurant/orders" className="rounded-full bg-[#123d30] px-5 py-3 text-xs font-semibold text-white">View orders →</Link>}/><div className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#e8ddc8] bg-white p-4"><div><p className="text-sm font-semibold text-[#244638]">Restaurant availability</p><p className="mt-1 text-xs text-[#798078]">{restaurant.approvalStatus === "APPROVED" ? (restaurant.operationalStatus === "ACTIVE" ? "Currently accepting orders" : "Currently not accepting orders") : "Restaurant must be approved before going live"}</p></div><button disabled={restaurant.approvalStatus !== "APPROVED"} onClick={toggleRestaurant} className="rounded-full bg-[#123d30] px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">{restaurant.operationalStatus === "ACTIVE" ? "Pause orders" : "Go online"}</button></div><div className="grid gap-4 sm:grid-cols-3"><StatCard label="Orders" value={orders.length} note="All restaurant orders" icon="▤"/><StatCard label="Active menu items" value={products.filter((product) => product.isAvailable).length} note={`${products.length} total items`} icon="◉"/><StatCard label="Approval status" value={restaurant.approvalStatus} note={restaurant.operationalStatus} icon="⌂" tone="gold"/></div><div className="mt-6"><OrderList orders={recentOrders} restaurantMode /></div></>;
 
   const pending = restaurants.filter((item) => item.approvalStatus === "PENDING").length;
+  const pendingRestaurants = restaurants.filter((item) => item.approvalStatus === "PENDING");
   const liveCount = restaurants.filter((item) => item.operationalStatus === "ACTIVE").length;
-  return <><PageHeading eyebrow={role === "superAdmin" ? "Platform control" : "Operations"} title={role === "superAdmin" ? "Platform overview" : "Operations overview"} description="Live overview from restaurant, approval, and order records." action={<Link to={role === "superAdmin" ? "/dashboard/super-admin/approvals" : "/dashboard/admin/restaurants"} className="rounded-full bg-[#123d30] px-5 py-3 text-xs font-semibold text-white">{role === "superAdmin" ? "Review applications" : "Manage restaurants"} →</Link>}/>{error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard label={role === "superAdmin" ? "Pending applications" : "Restaurants"} value={role === "superAdmin" ? pending : restaurants.length} note="Live from the platform API" icon="⌂" tone="gold"/><StatCard label="Live restaurants" value={liveCount} note="Currently accepting orders" icon="◉"/><StatCard label="Orders" value={orders.length} note="Recent order records" icon="▤"/><StatCard label="Delivered" value={orders.filter((order) => order.status === "DELIVERED").length} note="Completed orders" icon="✓"/></div><div className="mt-6 grid gap-6 xl:grid-cols-2"><SectionCard title="Recent orders" caption="Latest marketplace activity" action={<Link to="/dashboard/admin/orders" className="text-xs font-semibold text-[#337153]">View orders →</Link>}><OrderList orders={recentOrders}/></SectionCard><SectionCard title={role === "superAdmin" ? "Awaiting approval" : "Restaurant partners"} caption="Current records from the admin API" action={<Link to={role === "superAdmin" ? "/dashboard/super-admin/approvals" : "/dashboard/admin/restaurants"} className="text-xs font-semibold text-[#337153]">View all →</Link>}><div className="divide-y divide-[#f0ece4]">{restaurants.slice(0, 5).map((item) => <div key={item._id} className="flex items-center justify-between gap-3 px-5 py-4"><div><p className="text-sm font-medium text-[#294839]">{item.name}</p><p className="mt-1 text-xs text-[#818980]">{item.address?.city || ""}</p></div><StatusPill color={item.approvalStatus === "APPROVED" ? "green" : item.approvalStatus === "PENDING" ? "amber" : "gray"}>{item.approvalStatus?.toLowerCase()}</StatusPill></div>)}{restaurants.length === 0 && <p className="p-5 text-sm text-[#798078]">No restaurants to show.</p>}</div></SectionCard></div></>;
+  const visibleRestaurants = role === "superAdmin" ? pendingRestaurants : restaurants;
+  return <><PageHeading eyebrow={role === "superAdmin" ? "Platform control" : "Operations"} title={role === "superAdmin" ? "Platform overview" : "Operations overview"} description="Live overview from restaurant, approval, and order records." action={<Link to={role === "superAdmin" ? "/dashboard/super-admin/approvals" : "/dashboard/admin/restaurants"} className="rounded-full bg-[#123d30] px-5 py-3 text-xs font-semibold text-white">{role === "superAdmin" ? "Review applications" : "Manage restaurants"} →</Link>}/>{error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard label={role === "superAdmin" ? "Pending applications" : "Restaurants"} value={role === "superAdmin" ? pending : restaurants.length} note="Live from the platform API" icon="⌂" tone="gold"/><StatCard label="Live restaurants" value={liveCount} note="Currently accepting orders" icon="◉"/><StatCard label="Orders" value={orders.length} note="Recent order records" icon="▤"/><StatCard label="Delivered" value={orders.filter((order) => order.status === "DELIVERED").length} note="Completed orders" icon="✓"/></div><div className="mt-6 grid gap-6 xl:grid-cols-2"><SectionCard title="Recent orders" caption="Latest marketplace activity" action={<Link to="/dashboard/admin/orders" className="text-xs font-semibold text-[#337153]">View orders →</Link>}><OrderList orders={recentOrders}/></SectionCard><SectionCard title={role === "superAdmin" ? "Pending applications" : "Restaurant partners"} caption={role === "superAdmin" ? `${pending} application${pending === 1 ? "" : "s"} awaiting review` : "Current records from the admin API"} action={<Link to={role === "superAdmin" ? "/dashboard/super-admin/approvals" : "/dashboard/admin/restaurants"} className="text-xs font-semibold text-[#337153]">{role === "superAdmin" ? "Review all →" : "View all →"}</Link>}><div className="divide-y divide-[#f0ece4]">{visibleRestaurants.slice(0, 5).map((item) => <div key={item._id} className="flex items-center justify-between gap-3 px-5 py-4"><div><p className="text-sm font-medium text-[#294839]">{item.name}</p>{role === "superAdmin" && <p className="mt-1 font-mono text-[10px] font-semibold tracking-wide text-[#31594b]">Restaurant No. {String(item.restaurantNumber).padStart(6, "0")}</p>}<p className="mt-1 text-xs text-[#818980]">{item.address?.city || ""}</p></div><StatusPill color={item.approvalStatus === "APPROVED" ? "green" : item.approvalStatus === "PENDING" ? "amber" : "gray"}>{item.approvalStatus?.toLowerCase()}</StatusPill></div>)}{visibleRestaurants.length === 0 && <p className="p-5 text-sm text-[#798078]">{role === "superAdmin" ? "No restaurant applications are waiting for approval." : "No restaurants to show."}</p>}</div></SectionCard></div></>;
 }
 
 function OrderList({ orders, restaurantMode = false }) {

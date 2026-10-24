@@ -75,6 +75,13 @@ const resendVerificationSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
 
+const contactEnquirySchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().toLowerCase().email(),
+  phone: z.string().trim().min(7).max(20),
+  message: z.string().trim().min(5).max(2000),
+});
+
 const updateProfileSchema = z
   .object({
     name: z.string().trim().min(2).max(80).optional(),
@@ -165,6 +172,21 @@ const orderSchema = z
       duplicateFoodItems.add(item.foodItemId);
     }
   });
+
+const whatsappOrderNotificationSchema = z.object({
+  customerName: z.string().trim().min(2).max(80),
+  customerEmail: z.string().trim().toLowerCase().email(),
+  phoneNumber,
+  deliveryAddress: z.string().trim().min(5).max(500),
+  location: z.string().trim().max(500).optional(),
+  items: z.array(
+    z.object({
+      name: z.string().trim().min(2).max(120),
+      quantity: z.coerce.number().int().min(1).max(20),
+      unitPrice: z.coerce.number().finite().positive().max(1000000),
+    }),
+  ).min(1).max(30),
+});
 
 const updateOrderStatusSchema = z
   .object({
@@ -292,12 +314,14 @@ module.exports = {
   loginSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  contactEnquirySchema,
   updateProfileSchema,
   updateUserSchema,
   restaurantSchema,
   foodItemSchema,
   cartItemSchema,
   orderSchema,
+  whatsappOrderNotificationSchema,
   updateOrderStatusSchema,
   idParamSchema,
   restaurantIdParamSchema,

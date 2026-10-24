@@ -3,6 +3,7 @@ import { ShopContext } from "../context/ShopContextContext";
 import { getRole } from "../features/dashboard/routes/roles";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthFeedback, loginUser, signupUser } from "../store/features/auth/authSlice";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Login");
@@ -22,8 +23,21 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (signupStatus === "succeeded") setCurrentState("Login");
-  }, [signupStatus]);
+    if (signupStatus === "succeeded") {
+      setCurrentState("Login");
+      toast.success(message || "Account created. Check your email to verify it.");
+    } else if (signupStatus === "failed") {
+      toast.error(error || "Could not create your account. Please try again.");
+    }
+  }, [signupStatus, message, error]);
+
+  useEffect(() => {
+    if (loginStatus === "succeeded") {
+      toast.success("Signed in successfully.");
+    } else if (loginStatus === "failed") {
+      toast.error(error || "Sign in failed. Check your email and password and try again.");
+    }
+  }, [loginStatus, error]);
 
   useEffect(() => {
     if (token) {
@@ -43,9 +57,6 @@ const Login = () => {
         <p className="prata-regular text-3xl">{currentState}</p>
         <hr className="h-[1.5px] w-8 border-none bg-gray-800" />
       </div>
-      {message && <p role="status" className="w-full rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{message}</p>}
-      {error && <p role="alert" className="w-full rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-
       {isSignup && <input onChange={(event) => setName(event.target.value)} value={name} type="text" className="w-full border border-gray-800 px-3 py-2" placeholder="Name" required minLength={2} maxLength={80} />}
       <input onChange={(event) => setEmail(event.target.value)} value={email} type="email" className="w-full border border-gray-800 px-3 py-2" placeholder="Email" required autoComplete="email" />
       <input onChange={(event) => setPassword(event.target.value)} value={password} type="password" className="w-full border border-gray-800 px-3 py-2" placeholder="Password" required autoComplete={isSignup ? "new-password" : "current-password"} minLength={isSignup ? 8 : 1} pattern={isSignup ? "(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}" : undefined} title={isSignup ? "Use 8+ characters with a lowercase letter, uppercase letter, and number." : undefined} />

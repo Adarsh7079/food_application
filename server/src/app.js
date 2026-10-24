@@ -8,6 +8,7 @@ const userRouter = require("./routes/user.route");
 const restaurantRouter = require("./routes/restaurant.route");
 const productRouter = require("./routes/product.route");
 const orderRouter = require("./routes/order.route");
+const contactRouter = require("./routes/contact.route");
 const sendApiError = require("./utils/sendApiError");
 
 const app = express();
@@ -50,6 +51,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/restaurants", restaurantRouter);
 app.use("/api/v1", productRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/contact", contactRouter);
 
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);

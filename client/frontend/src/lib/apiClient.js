@@ -57,5 +57,10 @@ apiClient.interceptors.response.use(
 );
 
 export function getApiErrorMessage(error, fallback = "Something went wrong. Please try again.") {
-  return error.response?.data?.message || error.response?.data?.error || error.message || fallback;
+  if (error.response?.data?.message || error.response?.data?.error) {
+    return error.response.data.message || error.response.data.error;
+  }
+  if (error.code === "ECONNABORTED") return "The server took too long to respond. Please try again.";
+  if (!error.response && error.request) return "Could not connect to the server. Check that the backend is running.";
+  return error.message || fallback;
 }

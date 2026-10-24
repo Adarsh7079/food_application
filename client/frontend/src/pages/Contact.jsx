@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import emailjs from "@emailjs/browser";
+import { toast } from "react-toastify";
 import NewsLetterBox from "../components/NewsLetterBox";
 import Title from "../components/Title";
+import { apiClient, getApiErrorMessage } from "../lib/apiClient";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -12,8 +13,6 @@ const Contact = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
 
   // =====================================================
   // HANDLE INPUT
@@ -34,26 +33,10 @@ const Contact = () => {
     e.preventDefault();
 
     setLoading(true);
-    setSuccess(false);
-    setError("");
 
     try {
-      await emailjs.send(
-        "service_4p00v93",
-        "template_wtul4vg",
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-        },
-        {
-          publicKey: "oGiPupD0J8VKfoVl8",
-        }
-      );
-
-      // Success
-      setSuccess(true);
+      await apiClient.post("/api/v1/contact", formData);
+      toast.success("Your ZaykaNest enquiry has been sent.");
 
       // Clear form
       setFormData({
@@ -62,12 +45,15 @@ const Contact = () => {
         phone: "",
         message: "",
       });
-    } catch (error) {
-      console.error("EmailJS Error:", error);
-
-      setError(
-        "Sorry, your message could not be sent. Please try again or contact us on WhatsApp."
-      );
+    } catch (requestError) {
+      console.error("Contact enquiry error:", requestError);
+      const message = requestError.response?.status === 404
+        ? "The contact email service is not available on the server yet. Please try again later or contact us on WhatsApp."
+        : getApiErrorMessage(
+          requestError,
+          "Sorry, your message could not be sent. Please try again or contact us on WhatsApp.",
+        );
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -323,38 +309,6 @@ const Contact = () => {
             </p>
 
           </div>
-
-          {/* SUCCESS MESSAGE */}
-
-          {success && (
-            <div className="mb-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3">
-
-              <p className="text-sm font-semibold text-green-700">
-                ✅ Message sent successfully!
-              </p>
-
-              <p className="text-xs text-green-600 mt-1">
-                Thank you for contacting us. We'll get back to you soon.
-              </p>
-
-            </div>
-          )}
-
-          {/* ERROR MESSAGE */}
-
-          {error && (
-            <div className="mb-5 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
-
-              <p className="text-sm font-semibold text-red-700">
-                ❌ Unable to send message
-              </p>
-
-              <p className="text-xs text-red-600 mt-1">
-                {error}
-              </p>
-
-            </div>
-          )}
 
           <form
             onSubmit={handleSubmit}

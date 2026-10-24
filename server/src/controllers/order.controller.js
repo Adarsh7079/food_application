@@ -2,12 +2,36 @@ const orderService = require("../services/order.service");
 const ApiResponse = require("../utils/ApiResponse");
 const sendApiError = require("../utils/sendApiError");
 const { STATUS_CODES } = require("../utils/constants");
+const {
+  sendOrderNotification,
+  sendWhatsAppOrderNotification,
+} = require("../services/email.service");
 
 const placeOrder = async (req, res) => {
   try {
     const order = await orderService.createOrder(req.user.userId, req.validated.body);
-    return res.status(STATUS_CODES.CREATED).json(new ApiResponse(STATUS_CODES.CREATED, order, "Order placed successfully"));
+    const notificationEmailSent = await sendOrderNotification({ order, customer: req.user });
+    return res.status(STATUS_CODES.CREATED).json(new ApiResponse(
+      STATUS_CODES.CREATED,
+      { order, notificationEmailSent },
+      notificationEmailSent
+        ? "Order placed successfully"
+        : "Order placed successfully, but the admin email could not be sent",
+    ));
   } catch (error) { return sendApiError(res, error, "Order placement failed"); }
+};
+
+const notifyWhatsAppCheckout = async (req, res) => {
+  const notificationEmailSent = await sendWhatsAppOrderNotification(
+    req.validated.body,
+  );
+  return res.status(STATUS_CODES.OK).json(new ApiResponse(
+    STATUS_CODES.OK,
+    { notificationEmailSent },
+    notificationEmailSent
+      ? "Order details emailed successfully"
+      : "Order details could not be emailed",
+  ));
 };
 const getMyOrders = async (req, res) => {
   try {
@@ -34,4 +58,11 @@ const getAllOrders = async (req, res) => {
     return res.status(200).json(new ApiResponse(200, orders, "Orders fetched successfully"));
   } catch (error) { return sendApiError(res, error, "Platform orders fetch failed"); }
 };
-module.exports = { placeOrder, getMyOrders, getRestaurantOrders, updateOrderStatus, getAllOrders };
+module.exports = {
+  placeOrder,
+  notifyWhatsAppCheckout,
+  getMyOrders,
+  getRestaurantOrders,
+  updateOrderStatus,
+  getAllOrders,
+};
