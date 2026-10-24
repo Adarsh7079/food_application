@@ -44,7 +44,14 @@ const App = () => {
 
   return (
     <div className="px-0 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={3500}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="light"
+      />
       {!isDashboard && <Navbar />}
       <Suspense fallback={<div className="grid min-h-[50vh] place-items-center text-sm text-[#798078]">Loading page…</div>}>
       <Routes>

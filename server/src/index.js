@@ -5,9 +5,11 @@ dotenv.config();
 
 const connectDB = require("./db");
 const app = require("./app");
+const { backfillRestaurantNumbers } = require("./services/restaurantNumber.service");
 
 // Connect to MongoDB
 connectDB()
+  .then(backfillRestaurantNumbers)
   .then(() => {
     app.listen(process.env.PORT || 8000, () => {
       console.log(`⚙️ Server is running at port : ${process.env.PORT || 8000}`);

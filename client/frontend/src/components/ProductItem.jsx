@@ -11,8 +11,8 @@ const ProductItem = ({ id, image, name, price, description, rating }) => {
   const product = { _id: id, image, name, price, description, rating };
 
   const handleAddToCart = async () => {
-    await addToCart(id, "default");
-    setShowDetails(false);
+    const added = await addToCart(id, "default");
+    if (added) setShowDetails(false);
   };
 
   return (

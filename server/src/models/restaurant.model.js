@@ -7,6 +7,13 @@ const {
 
 const restaurantSchema = new mongoose.Schema(
   {
+    restaurantNumber: {
+      type: Number,
+      unique: true,
+      sparse: true,
+      immutable: true,
+    },
+
     // Basic restaurant information
     name: {
       type: String,

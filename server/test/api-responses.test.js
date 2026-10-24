@@ -15,6 +15,8 @@ const {
 const {
   reviewRestaurantSchema,
   updateRestaurantSuspensionSchema,
+  whatsappOrderNotificationSchema,
+  contactEnquirySchema,
 } = require("../src/validations/schemas");
 
 const createResponse = () => ({
@@ -114,6 +116,47 @@ test("success responses retain their endpoint-specific message", () => {
       null,
       "Account created successfully. Check your email to verify your account.",
     ),
+  );
+});
+
+test("WhatsApp checkout email notifications validate customer and item details", () => {
+  const validCheckout = {
+    customerName: "Test Customer",
+    customerEmail: "customer@example.com",
+    phoneNumber: "+919876543210",
+    deliveryAddress: "Cyber City, Gurugram, Haryana",
+    location: "Gurugram Cyber City",
+    items: [{ name: "Poha", quantity: 2, unitPrice: 120 }],
+  };
+
+  assert.equal(whatsappOrderNotificationSchema.safeParse(validCheckout).success, true);
+  assert.equal(
+    whatsappOrderNotificationSchema.safeParse({
+      ...validCheckout,
+      items: [{ name: "Poha", quantity: 0, unitPrice: -1 }],
+    }).success,
+    false,
+  );
+});
+
+test("contact enquiries validate and normalize submitted email addresses", () => {
+  const result = contactEnquirySchema.safeParse({
+    name: "Test Customer",
+    email: " CUSTOMER@EXAMPLE.COM ",
+    phone: "+91 98765 43210",
+    message: "I would like to enquire about catering.",
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.data.email, "customer@example.com");
+  assert.equal(
+    contactEnquirySchema.safeParse({
+      name: "T",
+      email: "invalid",
+      phone: "",
+      message: "Hi",
+    }).success,
+    false,
   );
 });
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from "../lib/apiClient";
+import { apiClient, getApiErrorMessage } from "../lib/apiClient";
 import { defaultIndianFoodItems } from "../data/defaultIndianFoodItems";
 import { ShopContext } from "./ShopContextContext";
 import { PRODUCTS_API_ENABLED } from "../config/api";
@@ -12,6 +12,21 @@ const ShopContextProvider = (props) => {
 
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [deliveryLocation, setDeliveryLocation] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("deliveryLocation") || "null") || {
+        label: "Gurugram Cyber City",
+        address: "Cyber City, Gurugram, Haryana, India",
+        coordinates: null,
+      };
+    } catch {
+      return {
+        label: "Gurugram Cyber City",
+        address: "Cyber City, Gurugram, Haryana, India",
+        coordinates: null,
+      };
+    }
+  });
 
   const [cartItems, setCartItems] = useState(() => {
     try { return JSON.parse(localStorage.getItem("cartItems") || "{}"); }
@@ -50,8 +65,8 @@ const ShopContextProvider = (props) => {
     );
 
     if (!product) {
-      toast.error("Product not found");
-      return;
+      toast.error("This food item is no longer available.");
+      return false;
     }
 
     const normalizedSize =
@@ -63,7 +78,7 @@ const ShopContextProvider = (props) => {
       !normalizedSize
     ) {
       toast.error("Select a portion first");
-      return;
+      return false;
     }
 
     const cartSize =
@@ -90,21 +105,14 @@ const ShopContextProvider = (props) => {
     // ===================================================
     // UPDATE CART
     // ===================================================
-    let cartData = structuredClone(cartItems);
-
-    if (cartData[itemId]) {
-      if (cartData[itemId][cartSize]) {
-        cartData[itemId][cartSize] += 1;
-      } else {
-        cartData[itemId][cartSize] = 1;
-      }
-    } else {
-      cartData[itemId] = {};
-      cartData[itemId][cartSize] = 1;
-    }
-
-    setCartItems(cartData);
-
+    setCartItems((currentCart) => {
+      const cartData = structuredClone(currentCart);
+      cartData[itemId] ??= {};
+      cartData[itemId][cartSize] = (cartData[itemId][cartSize] || 0) + 1;
+      return cartData;
+    });
+    toast.success(`${product.name} added to your cart.`);
+    return true;
   };
 
   // =====================================================
@@ -139,30 +147,24 @@ const ShopContextProvider = (props) => {
     size,
     quantity
   ) => {
-    let cartData = structuredClone(cartItems);
+    setCartItems((currentCart) => {
+      const cartData = structuredClone(currentCart);
 
-    // Remove item if quantity reaches zero
-    if (quantity <= 0) {
-      if (cartData[itemId]) {
-        delete cartData[itemId][size];
+      if (quantity <= 0) {
+        if (cartData[itemId]) {
+          delete cartData[itemId][size];
 
-        if (
-          Object.keys(cartData[itemId])
-            .length === 0
-        ) {
-          delete cartData[itemId];
+          if (Object.keys(cartData[itemId]).length === 0) {
+            delete cartData[itemId];
+          }
         }
+      } else {
+        cartData[itemId] ??= {};
+        cartData[itemId][size] = quantity;
       }
-    } else {
-      if (!cartData[itemId]) {
-        cartData[itemId] = {};
-      }
 
-      cartData[itemId][size] = quantity;
-    }
-
-    setCartItems(cartData);
-
+      return cartData;
+    });
   };
 
   // =====================================================
@@ -253,16 +255,16 @@ const ShopContextProvider = (props) => {
             restaurantId: product.restaurant?._id || product.restaurant,
             restaurantName: product.restaurant?.name || "",
           }));
-          setProducts(normalizedProducts);
+          if (normalizedProducts.length > 0) {
+            setProducts(normalizedProducts);
+          }
         } else {
           toast.error(
             response.data.message
           );
         }
       } catch (error) {
-        console.log(error);
-        setProducts([]);
-        toast.error(error.message);
+        toast.error(getApiErrorMessage(error, "Could not load the menu."));
       }
     }, []);
 
@@ -276,6 +278,10 @@ const ShopContextProvider = (props) => {
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
+
+  useEffect(() => {
+    localStorage.setItem("deliveryLocation", JSON.stringify(deliveryLocation));
+  }, [deliveryLocation]);
 
   // =====================================================
   // REMOVE POPUP WHEN CART BECOMES EMPTY
@@ -304,6 +310,9 @@ const ShopContextProvider = (props) => {
 
     search,
     setSearch,
+
+    deliveryLocation,
+    setDeliveryLocation,
 
     showSearch,
     setShowSearch,

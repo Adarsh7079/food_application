@@ -1,12 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
 import { ShopContext } from "../context/ShopContextContext";
 import { defaultIndianFoodItems } from "../data/defaultIndianFoodItems";
 
-import { apiClient } from "../lib/apiClient";
+import { apiClient, getApiErrorMessage } from "../lib/apiClient";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMyProfile } from "../store/features/profile/profileSlice";
+import { getCurrentLocation, getReadableAddress } from "../lib/location";
 
 const PlaceOrder = () => {
   const [shareLocation, setShareLocation] = useState(false);
@@ -18,8 +20,10 @@ const PlaceOrder = () => {
     getCartCount,
     getCartPricing,
     products,
+    deliveryLocation,
   } = useContext(ShopContext);
   const token = useSelector((state) => state.auth.token);
+  const dispatch = useDispatch();
   const pricing = getCartPricing();
   const hasCartItems = getCartCount() > 0;
   const [formData, setFormData] = useState({
@@ -33,6 +37,50 @@ const PlaceOrder = () => {
     phone: "",
   });
 
+  useEffect(() => {
+    if (deliveryLocation.coordinates) return;
+    setFormData((current) => ({
+      ...current,
+      street: current.street || deliveryLocation.address || deliveryLocation.label,
+    }));
+  }, [deliveryLocation]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    let isMounted = true;
+    dispatch(fetchMyProfile())
+      .unwrap()
+      .then((profile) => {
+        if (!isMounted) return;
+
+        const [firstName = "", ...lastNameParts] = (profile.name || "")
+          .trim()
+          .split(/\s+/);
+        setFormData((current) => ({
+          ...current,
+          firstName: firstName || current.firstName,
+          lastName: lastNameParts.join(" ") || current.lastName,
+          email: profile.email || current.email,
+          street: profile.address || current.street,
+          phone: profile.phoneNumber || current.phone,
+        }));
+      })
+      .catch((error) => {
+        if (isMounted) {
+          toast.error(
+            typeof error === "string"
+              ? error
+              : "Could not load your saved profile details."
+          );
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, token]);
+
   const onChangeHandler = (event) => {
     const name = event.target.name;
     const value = event.target.value;
@@ -41,25 +89,82 @@ const PlaceOrder = () => {
 
   const getLocationDetails = () =>
     new Promise((resolve) => {
-      if (!shareLocation || !navigator.geolocation) {
-        resolve("Location not shared");
+      if (deliveryLocation.coordinates) {
+        resolve(deliveryLocation.address || deliveryLocation.label);
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) =>
-          resolve(
-            `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`
-          ),
-        () => {
-          toast.info("Location was not shared. The delivery address will be used instead.");
-          resolve("Location not shared")
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+      if (!shareLocation) {
+        resolve(deliveryLocation.label);
+        return;
+      }
+
+      getCurrentLocation()
+        .then(async (coordinates) => {
+          try {
+            resolve(
+              await getReadableAddress(coordinates) ||
+              `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`
+            );
+          } catch (error) {
+            console.error("Reverse geocoding failed during checkout:", error);
+            resolve(deliveryLocation.label);
+          }
+        })
+        .catch((error) => {
+          toast.info(`${error.message} Using ${deliveryLocation.label} instead.`);
+          resolve(deliveryLocation.label);
+        });
     });
 
-  const openOrderConfirmationInWhatsApp = (orderItems, pricing, location) => {
+  const emailWhatsAppCheckout = async (orderItems, location) => {
+    const address = [
+      `${formData.firstName} ${formData.lastName}`.trim(),
+      formData.street.trim(),
+      formData.city.trim(),
+      formData.state.trim(),
+      formData.postalCode.trim(),
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const emailLocation =
+      location === "Location not shared" ? deliveryLocation.label : location;
+
+    try {
+      const response = await apiClient.post(
+        "/api/v1/orders/whatsapp-notification",
+        {
+          customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+          customerEmail: formData.email.trim(),
+          phoneNumber: formData.phone.trim(),
+          deliveryAddress: address,
+          location: emailLocation,
+          items: orderItems.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: Number(item.price),
+          })),
+        },
+      );
+      return {
+        sent: response.data?.data?.notificationEmailSent === true,
+        message: response.data?.message,
+      };
+    } catch (error) {
+      console.error("Could not send WhatsApp checkout notification:", error);
+      return {
+        sent: false,
+        message: getApiErrorMessage(error, "Could not send the order email."),
+      };
+    }
+  };
+
+  const openOrderConfirmationInWhatsApp = (
+    orderItems,
+    pricing,
+    location,
+    confirmationNote = ""
+  ) => {
     const itemLines = orderItems
       .map((item) => `• ${item.name} × ${item.quantity} — ₹${item.price * item.quantity}`)
       .join("\n");
@@ -69,7 +174,8 @@ const PlaceOrder = () => {
       `Phone: ${formData.phone}`,
       `Email: ${formData.email}`,
       `Address: ${formData.street}, ${formData.city}`,
-      `Location: ${location}`,
+      `Location: ${location === "Location not shared" ? "Not shared; use the delivery address above" : location}`,
+      ...(confirmationNote ? [`Note: ${confirmationNote}`] : []),
       "",
       "*Items*",
       itemLines,
@@ -84,9 +190,20 @@ const PlaceOrder = () => {
     ].join("\n");
     const encodedMessage = encodeURIComponent(message);
 
-    window.location.assign(
-      `https://wa.me/919709628329?text=${encodedMessage}`
-    );
+    window.setTimeout(() => {
+      window.location.assign(`https://wa.me/919709628329?text=${encodedMessage}`);
+    }, 1500);
+  };
+
+  const redirectToWhatsAppCheckout = async (orderItems, pricing, location, note) => {
+    const emailResult = await emailWhatsAppCheckout(orderItems, location);
+    if (emailResult.sent) {
+      toast.success("Order details emailed to the admin. Opening WhatsApp to confirm.");
+    } else {
+      toast.error(`${emailResult.message || "Order email failed."} Opening WhatsApp so you can still confirm.`);
+    }
+    setCartItems({});
+    openOrderConfirmationInWhatsApp(orderItems, pricing, location, note);
   };
 
   const onSubmitHandler = async (event) => {
@@ -132,22 +249,33 @@ const PlaceOrder = () => {
       const pricing = getCartPricing();
       // Guest checkout remains available through the existing WhatsApp workflow.
       if (!token) {
-        setCartItems({});
-        openOrderConfirmationInWhatsApp(orderItems, pricing, location);
+        await redirectToWhatsAppCheckout(orderItems, pricing, location);
         return;
       }
 
       const byRestaurant = new Map();
       for (const item of orderItems) {
         if (!item.restaurantId || !/^[a-f0-9]{24}$/i.test(item._id)) {
-          throw new Error("This menu item is not connected to a restaurant yet. Please choose an available restaurant item.");
+          await redirectToWhatsAppCheckout(
+            orderItems,
+            pricing,
+            location,
+            "This menu item is not connected to online ordering."
+          );
+          return;
         }
         const restaurantItems = byRestaurant.get(item.restaurantId) || [];
         restaurantItems.push({ foodItemId: item._id, quantity: item.quantity });
         byRestaurant.set(item.restaurantId, restaurantItems);
       }
       if (byRestaurant.size !== 1) {
-        throw new Error("Please place one restaurant's items per order. Remove items from other restaurants first.");
+        await redirectToWhatsAppCheckout(
+          orderItems,
+          pricing,
+          location,
+          "The cart contains items from multiple restaurants."
+        );
+        return;
       }
 
       const deliveryAddress = {
@@ -166,7 +294,11 @@ const PlaceOrder = () => {
       );
       if (!response.data.success) throw new Error(response.data.message || "Failed to place COD order.");
       setCartItems({});
-      toast.success("Order placed successfully.");
+      if (response.data.data?.notificationEmailSent === false) {
+        toast.warning("Order placed successfully, but the admin email could not be sent.");
+      } else {
+        toast.success("Order placed successfully.");
+      }
       navigate("/orders");
     } catch (error) {
       console.log(error);
@@ -266,7 +398,7 @@ const PlaceOrder = () => {
             className="mt-1 h-4 w-4 accent-orange-600"
           />
           <span>
-            Share my current location with the delivery team. We will request your browser location only when you place this order.
+            Use my current browser location for delivery. If unavailable, we will use the selected navbar location and address.
           </span>
         </label>
       </div>

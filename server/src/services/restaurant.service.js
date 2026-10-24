@@ -1,5 +1,6 @@
 const Restaurant = require("../models/restaurant.model");
 const User = require("../models/user.model");
+const { nextRestaurantNumber } = require("./restaurantNumber.service");
 
 const ApiError = require("../utils/ApiError");
 
@@ -127,8 +128,10 @@ const createRestaurant = async (userId, payload) => {
   }
 
   const slug = await generateUniqueSlug(name);
+  const restaurantNumber = await nextRestaurantNumber();
 
   const restaurant = await Restaurant.create({
+    restaurantNumber,
     name,
     slug,
     description,
