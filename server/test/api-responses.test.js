@@ -1,8 +1,10 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
+const jwt = require("jsonwebtoken");
 
 const ApiError = require("../src/utils/ApiError");
 const ApiResponse = require("../src/utils/ApiResponse");
+const authController = require("../src/controllers/auth.controller");
 const sendApiError = require("../src/utils/sendApiError");
 const User = require("../src/models/user.model");
 const Restaurant = require("../src/models/restaurant.model");
@@ -38,6 +40,10 @@ const createResponse = () => ({
   },
   json(body) {
     this.body = body;
+    return this;
+  },
+  clearCookie(name, options) {
+    this.clearedCookie = { name, options };
     return this;
   },
 });
@@ -127,6 +133,49 @@ test("success responses retain their endpoint-specific message", () => {
       "Account created successfully. Check your email to verify your account.",
     ),
   );
+});
+
+test("logout clears the refresh cookie and revokes its matching token", async () => {
+  const originalSecret = process.env.REFRESH_TOKEN_SECRET;
+  const originalFindOneAndUpdate = User.findOneAndUpdate;
+  const userId = "507f1f77bcf86cd799439011";
+  const refreshToken = jwt.sign(
+    { userId },
+    "test-refresh-secret",
+    { expiresIn: "1h" },
+  );
+  let revokedFilter;
+  let revokedUpdate;
+  process.env.REFRESH_TOKEN_SECRET = "test-refresh-secret";
+  User.findOneAndUpdate = async (filter, update) => {
+    revokedFilter = filter;
+    revokedUpdate = update;
+  };
+  const response = createResponse();
+
+  try {
+    await authController.logout(
+      { cookies: { refreshToken } },
+      response,
+    );
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.clearedCookie.name, "refreshToken");
+    assert.deepEqual(response.clearedCookie.options, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/api/v1/auth",
+    });
+    assert.equal(revokedFilter._id, userId);
+    assert.equal(typeof revokedFilter.refreshToken, "string");
+    assert.equal(revokedUpdate.$inc.authTokenVersion, 1);
+    assert.equal(revokedUpdate.$unset.refreshToken, 1);
+  } finally {
+    User.findOneAndUpdate = originalFindOneAndUpdate;
+    if (originalSecret === undefined) delete process.env.REFRESH_TOKEN_SECRET;
+    else process.env.REFRESH_TOKEN_SECRET = originalSecret;
+  }
 });
 
 test("WhatsApp checkout email notifications validate customer and item details", () => {

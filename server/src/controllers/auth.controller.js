@@ -256,24 +256,41 @@ const refreshAccessToken = async (req, res) => {
 // ========================================
 
 const logout = async (req, res) => {
+  const cookieName = process.env.REFRESH_TOKEN_COOKIE_NAME || "refreshToken";
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/api/v1/auth",
+  };
+
+  res.clearCookie(cookieName, cookieOptions);
+
   try {
-    const cookieName = process.env.REFRESH_TOKEN_COOKIE_NAME || "refreshToken";
+    const refreshToken = req.cookies?.[cookieName];
+    if (refreshToken) {
+      let decoded;
+      try {
+        decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      } catch (error) {
+        if (!(error instanceof jwt.JsonWebTokenError)) throw error;
+      }
 
-    // Revoke both the refresh token and all access tokens issued before logout.
-    await User.findByIdAndUpdate(req.user.userId, {
-      $inc: { authTokenVersion: 1 },
-      $unset: { refreshToken: 1 },
-    });
+      if (decoded?.userId) {
+        const refreshTokenHash = crypto
+          .createHash("sha256")
+          .update(refreshToken)
+          .digest("hex");
 
-    res.clearCookie(cookieName, {
-      httpOnly: true,
-
-      secure: process.env.NODE_ENV === "production",
-
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-
-      path: "/api/v1/auth",
-    });
+        await User.findOneAndUpdate(
+          { _id: decoded.userId, refreshToken: refreshTokenHash },
+          {
+            $inc: { authTokenVersion: 1 },
+            $unset: { refreshToken: 1 },
+          },
+        );
+      }
+    }
 
     return res
       .status(200)
