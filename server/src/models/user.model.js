@@ -68,6 +68,11 @@ const userSchema = new mongoose.Schema(
             default: null,
         },
 
+        locationAnalyticsConsent: {
+            type: Boolean,
+            default: null,
+        },
+
         phoneNumber: {
             type: String,
             default: null,

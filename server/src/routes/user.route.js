@@ -6,7 +6,11 @@ const authenticate = require("../middlewares/auth.middleware");
 
 const validate = require("../middlewares/validate");
 
-const { updateProfileSchema } = require("../validations/schemas");
+const {
+  updateProfileSchema,
+  locationAnalyticsConsentSchema,
+  customerLocationSchema,
+} = require("../validations/schemas");
 
 const router = express.Router();
 
@@ -19,6 +23,20 @@ router.patch(
   authenticate,
   validate(updateProfileSchema),
   userController.updateProfile,
+);
+
+router.patch(
+  "/me/location-consent",
+  authenticate,
+  validate(locationAnalyticsConsentSchema),
+  userController.updateLocationConsent,
+);
+
+router.post(
+  "/location-activity",
+  authenticate,
+  validate(customerLocationSchema),
+  userController.recordLocationActivity,
 );
 
 module.exports = router;

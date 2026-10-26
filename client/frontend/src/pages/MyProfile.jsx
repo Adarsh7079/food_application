@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyProfile, saveMyProfile } from "../store/features/profile/profileSlice";
+import { locationAnalyticsConsentUpdated } from "../store/features/auth/authSlice";
 import { getRole } from "../features/dashboard/routes/roles";
+import { apiClient, getApiErrorMessage } from "../lib/apiClient";
 
 const Field = ({ label, name, value, onChange, editing, type = "text", required = false }) => (
   <label className="block text-xs font-semibold text-[#627168]">
@@ -24,6 +26,9 @@ export default function MyProfile() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", phoneNumber: "", address: "" });
   const [saved, setSaved] = useState(false);
+  const [consentSaving, setConsentSaving] = useState(false);
+  const [consentError, setConsentError] = useState("");
+  const [locationConsent, setLocationConsent] = useState(false);
 
   useEffect(() => {
     if (token) dispatch(fetchMyProfile());
@@ -32,6 +37,7 @@ export default function MyProfile() {
   useEffect(() => {
     if (profile) {
       setForm({ name: profile.name || "", phoneNumber: profile.phoneNumber || "", address: profile.address || "" });
+      setLocationConsent(profile.locationAnalyticsConsent === true);
     }
   }, [profile]);
 
@@ -48,6 +54,25 @@ export default function MyProfile() {
     if (saveMyProfile.fulfilled.match(result)) {
       setEditing(false);
       setSaved(true);
+    }
+  };
+
+  const updateLocationConsent = async (consent) => {
+    setConsentSaving(true);
+    setConsentError("");
+    try {
+      await apiClient.patch("/api/v1/user/me/location-consent", { consent });
+      setLocationConsent(consent);
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify({ ...authUser, locationAnalyticsConsent: consent }),
+      );
+      dispatch(locationAnalyticsConsentUpdated(consent));
+      setSaved(true);
+    } catch (requestError) {
+      setConsentError(getApiErrorMessage(requestError, "Could not update your location preference."));
+    } finally {
+      setConsentSaving(false);
     }
   };
 
@@ -84,6 +109,29 @@ export default function MyProfile() {
             </div>
             {editing && <div className="mt-7 flex flex-wrap gap-3"><button type="submit" disabled={saving} className="rounded-full bg-[#123d30] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#1d4d3e] disabled:cursor-wait disabled:opacity-60">{saving ? "Saving…" : "Save changes"}</button><button type="button" onClick={() => { setEditing(false); setForm({ name: profile?.name || "", phoneNumber: profile?.phoneNumber || "", address: profile?.address || "" }); }} className="rounded-full border border-[#e5dfd4] px-5 py-3 text-xs font-semibold text-[#687269]">Cancel</button></div>}
           </form>
+          {displayUser?.roles?.includes("CUSTOMER") && (
+            <section className="mt-8 border-t border-[#f0ece4] pt-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="max-w-xl">
+                  <h2 className="text-sm font-semibold text-[#244638]">Approximate login location</h2>
+                  <p className="mt-1 text-xs leading-5 text-[#858c84]">
+                    {locationConsent
+                      ? "Location sharing is on. Only daily login counts for roughly 1 km areas are retained; your name and exact GPS are not stored. Turning this off stops future collection, but existing aggregate counts remain."
+                      : "If enabled, your browser may share approximate location after sign-in. Restaurant partners and platform admins can see area-level counts."}
+                  </p>
+                  {consentError && <p role="alert" className="mt-2 text-xs text-red-700">{consentError}</p>}
+                </div>
+                <button
+                  type="button"
+                  disabled={consentSaving || loading}
+                  onClick={() => updateLocationConsent(!locationConsent)}
+                  className="rounded-full border border-[#d9e2d5] px-4 py-2.5 text-xs font-semibold text-[#31594b] disabled:opacity-50"
+                >
+                  {consentSaving ? "Saving…" : locationConsent ? "Turn off" : "Allow"}
+                </button>
+              </div>
+            </section>
+          )}
           <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-[#f0ece4] pt-6"><div><p className="text-sm font-semibold text-[#244638]">Want another meal?</p><p className="mt-1 text-xs text-[#858c84]">Browse the menu and find a new favourite.</p></div><Link to="/menu" className="rounded-full bg-[#f3d7a1] px-4 py-2.5 text-xs font-semibold text-[#123d30] hover:bg-[#efc77e]">Explore menu →</Link></div>
         </>}
       </div>

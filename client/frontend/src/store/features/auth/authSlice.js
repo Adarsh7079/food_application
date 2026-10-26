@@ -134,6 +134,11 @@ const authSlice = createSlice({
       state.token = action.payload;
       if (!action.payload) state.currentUser = null;
     },
+    locationAnalyticsConsentUpdated(state, action) {
+      if (state.currentUser) {
+        state.currentUser.locationAnalyticsConsent = action.payload;
+      }
+    },
   },
   extraReducers(builder) {
     builder
@@ -185,5 +190,9 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearAuthFeedback, accessTokenRefreshed } = authSlice.actions;
+export const {
+  clearAuthFeedback,
+  accessTokenRefreshed,
+  locationAnalyticsConsentUpdated,
+} = authSlice.actions;
 export default authSlice.reducer;

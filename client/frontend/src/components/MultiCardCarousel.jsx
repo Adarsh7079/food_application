@@ -61,6 +61,7 @@ const MultiCardCarousel = ({ items = [], interval = 3500 }) => {
                 price={item.price}
                 description={item.description}
                 rating={item.rating}
+                ratingCount={item.ratingCount}
               />
             </div>
           ))}

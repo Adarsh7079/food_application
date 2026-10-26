@@ -537,7 +537,7 @@ const SpecialOffers = () => {
                       <h3 className="line-clamp-2 text-sm font-bold text-[#123d30] sm:text-base">
                         {item.name}
                       </h3>
-                      {item.rating && <span className="shrink-0 text-xs font-bold text-[#9a702d]">★ {item.rating}</span>}
+                      {item.ratingCount > 0 && <span className="shrink-0 text-xs font-bold text-[#9a702d]">★ {item.rating} ({item.ratingCount})</span>}
                     </div>
                     <p className="mt-1 line-clamp-2 min-h-9 text-xs leading-4 text-[#617168]">
                       {item.description || "Freshly prepared with carefully selected ingredients."}

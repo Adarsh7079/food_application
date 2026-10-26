@@ -164,6 +164,7 @@ const login = async (req, res) => {
             roles: user.roles,
             userStatus: user.userStatus,
             profileImage: user.profileImage,
+            locationAnalyticsConsent: user.locationAnalyticsConsent,
           },
         },
         "Login successful",

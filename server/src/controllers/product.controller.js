@@ -1,4 +1,5 @@
 const productService = require("../services/products.service");
+const productReviewsService = require("../services/productReviews.service");
 const ApiResponse = require("../utils/ApiResponse");
 const sendApiError = require("../utils/sendApiError");
 
@@ -58,4 +59,48 @@ const updateProductAvailability = async (req, res) => {
   }
 };
 
-module.exports = { listPublicProducts, listCategories, createCategory, listRestaurantProducts, createProduct, updateProductAvailability };
+const listProductReviews = async (req, res) => {
+  try {
+    const result = await productReviewsService.getProductReviews(req.params.productId);
+    return res.status(200).json(new ApiResponse(200, result, "Product reviews fetched successfully"));
+  } catch (error) {
+    return sendApiError(res, error, "Product reviews fetch failed");
+  }
+};
+
+const getMyProductReview = async (req, res) => {
+  try {
+    const result = await productReviewsService.getMyProductReview(
+      req.params.productId,
+      req.user.userId,
+    );
+    return res.status(200).json(new ApiResponse(200, result, "Your product review fetched successfully"));
+  } catch (error) {
+    return sendApiError(res, error, "Customer product review fetch failed");
+  }
+};
+
+const submitProductReview = async (req, res) => {
+  try {
+    const result = await productReviewsService.submitProductReview(
+      req.params.productId,
+      req.user.userId,
+      req.validated.body,
+    );
+    return res.status(200).json(new ApiResponse(200, result, "Product rating submitted successfully"));
+  } catch (error) {
+    return sendApiError(res, error, "Product rating submission failed");
+  }
+};
+
+module.exports = {
+  listPublicProducts,
+  listCategories,
+  createCategory,
+  listRestaurantProducts,
+  createProduct,
+  updateProductAvailability,
+  listProductReviews,
+  getMyProductReview,
+  submitProductReview,
+};

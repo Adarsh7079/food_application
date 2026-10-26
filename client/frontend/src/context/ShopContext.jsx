@@ -268,6 +268,22 @@ const ShopContextProvider = (props) => {
       }
     }, []);
 
+  const submitProductReview = useCallback(async (productId, review) => {
+    const response = await apiClient.put(
+      `/api/v1/products/${productId}/reviews`,
+      review,
+    );
+    const result = response.data.data;
+    setProducts((currentProducts) =>
+      currentProducts.map((product) =>
+        product._id === productId
+          ? { ...product, rating: result.rating, ratingCount: result.ratingCount }
+          : product,
+      ),
+    );
+    return result;
+  }, []);
+
   // =====================================================
   // LOAD PRODUCTS
   // =====================================================
@@ -303,6 +319,7 @@ const ShopContextProvider = (props) => {
   // =====================================================
   const value = {
     products,
+    submitProductReview,
 
     currency,
 

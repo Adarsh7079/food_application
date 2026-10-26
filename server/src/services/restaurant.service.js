@@ -3,6 +3,7 @@ const User = require("../models/user.model");
 const { nextRestaurantNumber } = require("./restaurantNumber.service");
 
 const ApiError = require("../utils/ApiError");
+const { geocodeRestaurantAddress } = require("./geocoding.service");
 
 const {
   USER_ROLE,
@@ -129,6 +130,7 @@ const createRestaurant = async (userId, payload) => {
 
   const slug = await generateUniqueSlug(name);
   const restaurantNumber = await nextRestaurantNumber();
+  const location = await geocodeRestaurantAddress(address);
 
   const restaurant = await Restaurant.create({
     restaurantNumber,
@@ -137,6 +139,7 @@ const createRestaurant = async (userId, payload) => {
     description,
     contactPhone,
     address,
+    location,
     logo,
     coverImage,
     owner: userId,
@@ -362,6 +365,7 @@ const updateMyRestaurant = async (userId, payload) => {
 
   if (address !== undefined) {
     restaurant.address = address;
+    restaurant.location = await geocodeRestaurantAddress(address);
   }
 
   if (logo !== undefined) {

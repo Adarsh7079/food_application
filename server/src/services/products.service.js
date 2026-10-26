@@ -1,6 +1,7 @@
 const Product = require("../models/product.model");
 const Category = require("../models/category.model");
 const Restaurant = require("../models/restaurant.model");
+const ProductReview = require("../models/productReview.model");
 const ApiError = require("../utils/ApiError");
 const { PRODUCT_STATUS } = require("../utils/constants");
 const { RESTAURANT_STATUS, RESTAURANT_OPERATIONAL_STATUS } = require("../utils/constants");
@@ -47,7 +48,36 @@ const getPublicProducts = async ({ restaurantId, category } = {}) => {
     isAvailable: true,
   };
   if (category) filter.category = category;
-  return Product.find(filter).populate("category", "name slug").populate("restaurant", "name slug").sort({ createdAt: -1 });
+  const products = await Product.find(filter)
+    .populate("category", "name slug")
+    .populate("restaurant", "name slug")
+    .sort({ createdAt: -1 });
+  if (products.length === 0) return products;
+
+  const ratings = await ProductReview.aggregate([
+    { $match: { product: { $in: products.map((product) => product._id) } } },
+    {
+      $group: {
+        _id: "$product",
+        rating: { $avg: "$rating" },
+        ratingCount: { $sum: 1 },
+      },
+    },
+  ]);
+  const ratingByProduct = new Map(
+    ratings.map((rating) => [
+      rating._id.toString(),
+      {
+        rating: Number(rating.rating.toFixed(1)),
+        ratingCount: rating.ratingCount,
+      },
+    ]),
+  );
+
+  return products.map((product) => ({
+    ...product.toObject(),
+    ...ratingByProduct.get(product._id.toString()),
+  }));
 };
 
 const getRestaurantProducts = async (restaurantId) =>

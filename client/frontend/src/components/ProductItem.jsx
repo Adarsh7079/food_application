@@ -2,13 +2,13 @@ import React, { useContext, useState } from "react";
 import { ShopContext } from "../context/ShopContextContext";
 import ProductDetailsModal from "./ProductDetailsModal";
 
-const ProductItem = ({ id, image, name, price, description, rating }) => {
+const ProductItem = ({ id, image, name, price, description, rating, ratingCount = 0 }) => {
   const { currency, addToCart } = useContext(ShopContext);
   const [imgError, setImgError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
   const mainSrc = Array.isArray(image) ? image[0] : image;
-  const product = { _id: id, image, name, price, description, rating };
+  const product = { _id: id, image, name, price, description, rating, ratingCount };
 
   const handleAddToCart = async () => {
     const added = await addToCart(id, "default");
@@ -58,10 +58,10 @@ const ProductItem = ({ id, image, name, price, description, rating }) => {
           >
             <div className="flex items-start justify-between gap-3">
               <p className="text-lg font-bold text-stone-900">{name}</p>
-              {rating && (
+              {ratingCount > 0 && (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-bold text-green-700 ring-1 ring-green-200">
                   <span aria-hidden="true">★</span>
-                  {rating}
+                  {rating} ({ratingCount})
                 </span>
               )}
             </div>
