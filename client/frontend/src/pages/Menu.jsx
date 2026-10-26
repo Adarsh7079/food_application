@@ -690,7 +690,7 @@ const Menu = () => {
       {totalCartItems > 0 &&
         cartPopupItem && (
 
-          <div className="fixed bottom-4 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-[720px] z-[100]">
+          <div className="fixed bottom-24 left-3 right-3 z-[100] sm:left-1/2 sm:w-[720px] sm:-translate-x-1/2 md:bottom-4">
 
             <div className="bg-stone-950/95 backdrop-blur-xl border border-amber-500/30 shadow-2xl rounded-2xl p-3 sm:p-4">
 

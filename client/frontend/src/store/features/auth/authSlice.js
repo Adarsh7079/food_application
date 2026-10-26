@@ -63,19 +63,17 @@ export const restoreSession = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (sessionToken) => {
-    const token = sessionToken;
     setApiAccessToken("");
     localStorage.removeItem("currentUser");
-    if (token) {
-      try {
-        await apiClient.post("/api/v1/auth/logout", {}, {
-          headers: { Authorization: "Bearer " + token },
-          timeout: 5000,
-          skipAuthRefresh: true,
-        });
-      } catch {
-        // Clear the local session even if the API is unavailable.
-      }
+    try {
+      await apiClient.post("/api/v1/auth/logout", {}, {
+        headers: sessionToken ? { Authorization: "Bearer " + sessionToken } : {},
+        timeout: 5000,
+        skipAuthRefresh: true,
+      });
+      return { serverLogoutFailed: false };
+    } catch {
+      return { serverLogoutFailed: true };
     }
   },
 );

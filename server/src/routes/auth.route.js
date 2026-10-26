@@ -2,7 +2,6 @@ const express = require("express");
 const authController = require("../controllers/auth.controller");
 
 const validate = require("../middlewares/validate");
-const authenticate = require("../middlewares/auth.middleware");
 
 const {
   registerSchema,
@@ -37,6 +36,6 @@ router.post("/login", validate(loginSchema), authController.login);
 router.post("/refresh", authController.refreshAccessToken);
 
 // Logout
-router.post("/logout", authenticate, authController.logout);
+router.post("/logout", authController.logout);
 
 module.exports = router;

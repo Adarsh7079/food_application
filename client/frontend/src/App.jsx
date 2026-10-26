@@ -1,6 +1,5 @@
-import { lazy, Suspense, useContext, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { ShopContext } from "./context/ShopContextContext";
 const Home = lazy(() => import("./pages/Home"));
 const Menu = lazy(() => import("./pages/Menu"));
 const About = lazy(() => import("./pages/About"));
@@ -26,12 +25,7 @@ import RoleRoute from "./features/dashboard/routes/RoleRoute";
 const App = () => {
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
   const location = useLocation();
-  const { cartPopupItem, getCartCount } = useContext(ShopContext);
   const isDashboard = location.pathname.startsWith("/dashboard");
-  const hasVisibleCartPopup =
-    (location.pathname === "/menu" || location.pathname === "/categories") &&
-    Boolean(cartPopupItem) &&
-    getCartCount() > 0;
   const whatsappNumber = "919709628329";
   const whatsappOptions = [
     {
@@ -96,7 +90,7 @@ const App = () => {
       </Routes>
       </Suspense>
       {!isDashboard && <Footer />}
-      {!isDashboard && <div className={`fixed ${hasVisibleCartPopup ? "bottom-32" : "bottom-5"} right-5 z-50 flex flex-col items-end gap-3 sm:bottom-7 sm:right-7`}>
+      {!isDashboard && <div className="fixed bottom-5 right-5 z-50 flex flex-col-reverse items-end gap-3 md:bottom-7 md:right-7 md:flex-col">
         {isContactMenuOpen && (
           <section
             id="whatsapp-contact-menu"

@@ -113,7 +113,11 @@ const Navbar = () => {
   // =====================================================
 
   const logout = () => {
-    dispatch(logoutUser(token));
+    dispatch(logoutUser(token)).then((result) => {
+      if (logoutUser.fulfilled.match(result) && result.payload?.serverLogoutFailed) {
+        toast.error("You were signed out on this device, but the server could not clear the session cookie. Please check your connection.");
+      }
+    });
     setCartItems({});
 
     navigate("/login");
@@ -286,7 +290,7 @@ const Navbar = () => {
                 </button>
 
                 {isProfileMenuOpen && (
-                <div className="absolute right-0 z-[1100] pt-3">
+                <div className="absolute right-full top-0 z-[1100] pr-2">
 
                   <div role="menu" className="flex w-56 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
 
