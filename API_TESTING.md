@@ -238,12 +238,69 @@ Unsuspending returns the restaurant to `PENDING` and `INACTIVE`; a Super Admin m
 10. Test rejection and suspension/unsuspension on disposable test restaurants.
 11. Try an admin endpoint with an owner token and with no token; expect **403** and **401**, respectively.
 
-## 7. Response and validation notes
+## 7. Customer product ratings
+
+Product listings include `rating` and `ratingCount` when customer ratings exist. Visitors can read the most recent reviews:
+
+**GET** `{{base_url}}/api/v1/products/{{product_id}}/reviews`
+
+Submit a rating with a customer access token. Ratings are integers from 1 to 5; the written comment is optional and limited to 500 characters. Submitting again updates that customer's existing rating.
+
+**PUT** `{{base_url}}/api/v1/products/{{product_id}}/reviews` — requires a customer bearer token.
+
+```json
+{
+  "rating": 5,
+  "comment": "Fresh and delicious."
+}
+```
+
+The response returns the saved review and the updated product average/count. Customers can retrieve their existing rating to edit it:
+
+**GET** `{{base_url}}/api/v1/products/{{product_id}}/reviews/me` — requires a customer bearer token.
+
+## 8. Opt-in location analytics
+
+After a customer signs in, the frontend asks once whether they want to share approximate location. This is optional and does not block sign-in. The browser must be on HTTPS (or localhost) and the user must grant location permission. The profile page can turn sharing off or back on.
+
+**PATCH** `{{base_url}}/api/v1/user/me/location-consent` — requires a bearer token.
+
+```json
+{ "consent": true }
+```
+
+Only customers with consent can record login activity:
+
+**POST** `{{base_url}}/api/v1/user/location-activity` — requires a customer bearer token and saved consent.
+
+```json
+{
+  "latitude": 28.6139,
+  "longitude": 77.2090
+}
+```
+
+The backend rounds these coordinates into roughly 1 km cells and increments a daily cell counter. It does not save the user ID or exact GPS coordinates. Area counts under five login events are hidden from dashboards. Coarse aggregate counts are retained indefinitely; turning consent off stops future collection but does not remove existing aggregates.
+
+Admins, Super Admins, and restaurant partners can retrieve filtered map analytics:
+
+**GET** `{{base_url}}/api/v1/analytics/location-activity?from=2026-10-01&to=2026-10-31&search=28.61`
+
+Restaurant addresses are geocoded using OpenStreetMap Nominatim when a restaurant is registered or its address is saved. To populate map points for restaurants already in the database, run the one-time backfill from a machine configured with the backend database environment:
+
+```bash
+cd server
+npm run geocode:restaurants
+```
+
+The dashboard map uses OpenStreetMap tiles. Its public geocoder and tile services are best-effort and subject to their usage policies.
+
+## 9. Response and validation notes
 
 Successful API responses use `statusCode`, `success`, `message`, and `data`. Errors use `statusCode`, `success: false`, `message`, `data: null`, and `errors`. Schema validation failures generally return **422**; missing records return **404**; duplicate records can return **409**.
 
-Use MongoDB ObjectIds for `restaurant_id`. Do not test rejection or suspension against a real restaurant unless the action is intended.
+Use MongoDB ObjectIds for `restaurant_id` and `product_id`. Do not test rejection or suspension against a real restaurant unless the action is intended.
 
-## 8. Routes not currently available
+## 10. Additional routes
 
-The backend currently mounts authentication, user, restaurant-owner, and Super Admin restaurant routes. Product creation and order flows are not mounted as API routes in the application at this time, so this guide does not list them as usable Postman endpoints.
+Product catalog, restaurant product management, and order APIs are also mounted by the backend; see `server/src/routes/product.route.js` and `server/src/routes/order.route.js` for their current endpoints.

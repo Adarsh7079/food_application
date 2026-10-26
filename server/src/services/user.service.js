@@ -132,6 +132,17 @@ const updateMyProfile = async (userId, payload) => {
   return user;
 };
 
+const updateLocationAnalyticsConsent = async (userId, consent) => {
+  const user = await User.findByIdAndUpdate(
+    parseUserId(userId),
+    { $set: { locationAnalyticsConsent: consent } },
+    { new: true, runValidators: true },
+  ).select("locationAnalyticsConsent");
+
+  if (!user) throw createServiceError("User not found", 404);
+  return { locationAnalyticsConsent: user.locationAnalyticsConsent };
+};
+
 // ================================
 // AUTHENTICATE USER
 // ================================
@@ -238,6 +249,7 @@ module.exports = {
   getUserByEmail,
   getMyProfile,
   updateMyProfile,
+  updateLocationAnalyticsConsent,
   authenticateUser,
   createEmailVerificationToken,
   verifyEmail,

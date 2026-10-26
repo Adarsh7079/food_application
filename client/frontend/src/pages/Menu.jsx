@@ -541,14 +541,9 @@ const Menu = () => {
                           {item.name}
                         </button>
 
-                        {item.rating && (
+                        {item.ratingCount > 0 && (
                           <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
-
-                            ★{" "}
-                            {
-                              item.rating
-                            }
-
+                            ★ {item.rating} ({item.ratingCount})
                           </span>
                         )}
 

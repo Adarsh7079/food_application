@@ -92,6 +92,18 @@ const updateProfileSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "Provide at least one field to update",
   });
+const locationAnalyticsConsentSchema = z.object({
+  consent: z.boolean(),
+});
+const customerLocationSchema = z.object({
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+});
+const locationAnalyticsQuerySchema = z.object({
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+  search: z.string().trim().max(80).optional(),
+});
 
 const updateUserSchema = z
   .object({
@@ -302,6 +314,11 @@ const productAvailabilitySchema = z.object({
   restaurantId: objectId,
   isAvailable: z.boolean(),
 });
+const productIdParamSchema = z.object({ productId: objectId });
+const productReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(500).optional(),
+});
 const createCategorySchema = z.object({
   name: z.string().trim().min(2).max(60),
 });
@@ -316,6 +333,9 @@ module.exports = {
   resendVerificationSchema,
   contactEnquirySchema,
   updateProfileSchema,
+  locationAnalyticsConsentSchema,
+  customerLocationSchema,
+  locationAnalyticsQuerySchema,
   updateUserSchema,
   restaurantSchema,
   foodItemSchema,
@@ -335,5 +355,7 @@ module.exports = {
   createProductSchema,
   publicProductsQuerySchema,
   productAvailabilitySchema,
+  productIdParamSchema,
+  productReviewSchema,
   createCategorySchema,
 };

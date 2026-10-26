@@ -1,4 +1,5 @@
 import React, {
+  useRef,
   useContext,
   useEffect,
   useState,
@@ -21,6 +22,7 @@ import { getCurrentLocation, getReadableAddress } from "../lib/location";
 const Navbar = () => {
   const [visible, setVisible] =
     useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [isLocating, setIsLocating] = useState(false);
@@ -37,6 +39,7 @@ const Navbar = () => {
   const token = useSelector((state) => state.auth.token);
   const currentUser = useSelector((state) => state.auth.currentUser);
   const dispatch = useDispatch();
+  const profileMenuRef = useRef(null);
   const role = getRole(currentUser);
   const dashboardPath = role === "superAdmin"
     ? "/dashboard/super-admin"
@@ -87,6 +90,23 @@ const Navbar = () => {
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [isLocationPickerOpen]);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return undefined;
+
+    const closeProfileMenu = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+      if (event.key === "Escape") setIsProfileMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeProfileMenu);
+    document.addEventListener("keydown", closeProfileMenu);
+    return () => {
+      document.removeEventListener("pointerdown", closeProfileMenu);
+      document.removeEventListener("keydown", closeProfileMenu);
+    };
+  }, [isProfileMenuOpen]);
 
   // =====================================================
   // LOGOUT
@@ -253,60 +273,63 @@ const Navbar = () => {
             ================================================== */}
 
             {token && currentUser ? (
-              <div className="group relative">
+              <div className="relative" ref={profileMenuRef}>
                 <button
                   type="button"
+                  onClick={() => setIsProfileMenuOpen((open) => !open)}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9c9ab] bg-[#f7f1e7] text-[#123d30] transition hover:scale-105 hover:bg-[#f0e0c7]"
                   aria-label="Profile menu"
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileMenuOpen}
                 >
                   <img className="h-5 w-5" src={assets.profile_icon} alt="" />
                 </button>
 
-                <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4 z-[1100]">
+                {isProfileMenuOpen && (
+                <div className="absolute right-0 z-[1100] pt-3">
 
-                  <div className="flex w-48 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
+                  <div role="menu" className="flex w-56 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
 
                     <div className="mb-1 border-b border-gray-100 pb-2">
                       <p className="truncate text-sm font-semibold text-[#244638]">{currentUser?.name || "Your account"}</p>
                       <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a1783c]">{roleLabel} account</p>
                     </div>
 
-                    {dashboardPath && <p onClick={() => navigate(dashboardPath)} className="cursor-pointer font-semibold text-[#31594b] hover:text-black transition-colors">Dashboard</p>}
+                    {dashboardPath && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate(dashboardPath); }} className="text-left font-semibold text-[#31594b] transition-colors hover:text-black">Dashboard</button>}
 
-                    <p
-                      onClick={() =>
-                        navigate(
-                          "/my-profile"
-                        )
-                      }
-                      className="cursor-pointer hover:text-black transition-colors"
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setIsProfileMenuOpen(false); navigate("/my-profile"); }}
+                      className="text-left transition-colors hover:text-black"
                     >
                       My Profile
-                    </p>
+                    </button>
 
-                    <p
-                      onClick={() =>
-                        navigate(
-                          "/orders"
-                        )
-                      }
-                      className="cursor-pointer hover:text-black transition-colors"
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setIsProfileMenuOpen(false); navigate("/orders"); }}
+                      className="text-left transition-colors hover:text-black"
                     >
                       Orders
-                    </p>
+                    </button>
 
-                    {role === "customer" && <p onClick={() => navigate("/partner/apply")} className="cursor-pointer hover:text-black transition-colors">Become a restaurant partner</p>}
+                    {role === "customer" && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate("/partner/apply"); }} className="text-left transition-colors hover:text-black">Become a restaurant partner</button>}
 
-                    <p
-                      onClick={logout}
-                      className="cursor-pointer hover:text-black transition-colors"
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setIsProfileMenuOpen(false); logout(); }}
+                      className="text-left transition-colors hover:text-black"
                     >
                       Logout
-                    </p>
+                    </button>
 
                   </div>
 
                 </div>
+                )}
               </div>
             ) : (
               <Link

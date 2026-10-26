@@ -10,7 +10,8 @@
     "test": "node --test",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "seed:admin": "node src/scripts/seedadmin.js"
+    "seed:admin": "node src/scripts/seedadmin.js",
+    "geocode:restaurants": "node src/scripts/geocodeRestaurants.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

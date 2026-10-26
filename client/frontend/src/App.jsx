@@ -1,5 +1,6 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useContext, useState } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { ShopContext } from "./context/ShopContextContext";
 const Home = lazy(() => import("./pages/Home"));
 const Menu = lazy(() => import("./pages/Menu"));
 const About = lazy(() => import("./pages/About"));
@@ -19,12 +20,18 @@ const PartnerApplication = lazy(() => import("./pages/PartnerApplication"));
 const DashboardLayout = lazy(() => import("./features/dashboard/components/DashboardLayout"));
 const ApiDashboardHome = lazy(() => import("./features/dashboard/pages/ApiDashboardHome"));
 const ApiWorkspacePage = lazy(() => import("./features/dashboard/pages/ApiWorkspacePage"));
+const LocationAnalyticsPanel = lazy(() => import("./features/dashboard/components/LocationAnalyticsPanel"));
 import RoleRoute from "./features/dashboard/routes/RoleRoute";
 
 const App = () => {
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
   const location = useLocation();
+  const { cartPopupItem, getCartCount } = useContext(ShopContext);
   const isDashboard = location.pathname.startsWith("/dashboard");
+  const hasVisibleCartPopup =
+    (location.pathname === "/menu" || location.pathname === "/categories") &&
+    Boolean(cartPopupItem) &&
+    getCartCount() > 0;
   const whatsappNumber = "919709628329";
   const whatsappOptions = [
     {
@@ -69,7 +76,7 @@ const App = () => {
         <Route path="/my-profile" element={<RoleRoute allowed={["customer", "restaurant", "admin", "superAdmin"]}><MyProfile /></RoleRoute>} />
         <Route path="/partner/apply" element={<RoleRoute allowed={["customer", "restaurant"]}><PartnerApplication /></RoleRoute>} />
         <Route path="/dashboard/restaurant" element={<RoleRoute allowed={["restaurant"]}><DashboardLayout role="restaurant" /></RoleRoute>}>
-          <Route index element={<ApiDashboardHome role="restaurant" />} />
+          <Route index element={<><ApiDashboardHome role="restaurant" /><div className="mt-6"><LocationAnalyticsPanel /></div></>} />
           <Route path="orders" element={<ApiWorkspacePage role="restaurant" section="orders" />} />
           <Route path="menu" element={<ApiWorkspacePage role="restaurant" section="menu" />} />
           <Route path="profile" element={<ApiWorkspacePage role="restaurant" section="profile" />} />
@@ -80,7 +87,7 @@ const App = () => {
           <Route path="orders" element={<ApiWorkspacePage role="admin" section="orders" />} />
         </Route>
         <Route path="/dashboard/super-admin" element={<RoleRoute allowed={["superAdmin"]}><DashboardLayout role="superAdmin" /></RoleRoute>}>
-          <Route index element={<ApiDashboardHome role="superAdmin" />} />
+          <Route index element={<><ApiDashboardHome role="superAdmin" /><div className="mt-6"><LocationAnalyticsPanel /></div></>} />
           <Route path="approvals" element={<ApiWorkspacePage role="superAdmin" section="approvals" />} />
           <Route path="restaurants" element={<ApiWorkspacePage role="superAdmin" section="restaurants" />} />
           <Route path="categories" element={<ApiWorkspacePage role="superAdmin" section="categories" />} />
@@ -89,7 +96,7 @@ const App = () => {
       </Routes>
       </Suspense>
       {!isDashboard && <Footer />}
-      {!isDashboard && <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3 sm:bottom-7 sm:right-7">
+      {!isDashboard && <div className={`fixed ${hasVisibleCartPopup ? "bottom-32" : "bottom-5"} right-5 z-50 flex flex-col items-end gap-3 sm:bottom-7 sm:right-7`}>
         {isContactMenuOpen && (
           <section
             id="whatsapp-contact-menu"
