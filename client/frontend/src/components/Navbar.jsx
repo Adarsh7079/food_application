@@ -286,7 +286,11 @@ const Navbar = () => {
                   aria-haspopup="menu"
                   aria-expanded={isProfileMenuOpen}
                 >
-                  <img className="h-5 w-5" src={assets.profile_icon} alt="" />
+                  {currentUser?.profileImage ? (
+                    <img className="h-full w-full rounded-full object-cover" src={currentUser.profileImage} alt="Your profile" />
+                  ) : (
+                    <img className="h-5 w-5" src={assets.profile_icon} alt="" />
+                  )}
                 </button>
 
                 {isProfileMenuOpen && (
@@ -294,9 +298,12 @@ const Navbar = () => {
 
                   <div role="menu" className="flex w-56 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
 
-                    <div className="mb-1 border-b border-gray-100 pb-2">
-                      <p className="truncate text-sm font-semibold text-[#244638]">{currentUser?.name || "Your account"}</p>
-                      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a1783c]">{roleLabel} account</p>
+                    <div className="mb-1 flex items-center gap-3 border-b border-gray-100 pb-2">
+                      {currentUser?.profileImage ? <img src={currentUser.profileImage} alt="" className="h-10 w-10 rounded-full object-cover" /> : <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8f0e9] text-sm font-bold text-[#24503f]">{currentUser?.name?.slice(0, 1)?.toUpperCase() || "U"}</div>}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[#244638]">{currentUser?.name || "Your account"}</p>
+                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a1783c]">{roleLabel} account</p>
+                      </div>
                     </div>
 
                     {dashboardPath && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate(dashboardPath); }} className="text-left font-semibold text-[#31594b] transition-colors hover:text-black">Dashboard</button>}
@@ -392,11 +399,10 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(true)
               }
-              className="h-10 w-10 cursor-pointer rounded-full border border-[#d9c9ab] bg-[#f7f1e7] p-2.5 transition hover:bg-[#f0e0c7] sm:hidden"
+              className="md:hidden h-10 w-10 cursor-pointer rounded-full border border-[#d9c9ab] bg-[#f7f1e7] p-2.5 transition hover:bg-[#f0e0c7] sm:hidden"
               src={assets.menu_icon}
               alt="Menu"
             />
-
           </div>
 
         </div>

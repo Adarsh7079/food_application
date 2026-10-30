@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const crypto = require("crypto");
+const cloudinaryService = require("./cloudinary.service");
 
 const { USER_STATUS } = require("../utils/constants");
 
@@ -108,6 +109,17 @@ const updateMyProfile = async (userId, payload) => {
   const parsedUserId = parseUserId(userId);
 
   const updates = updateProfileSchema.parse(payload);
+  const imageFolder = `food_application/users/${parsedUserId}/profile/`;
+  if (
+    updates.profileImagePublicId &&
+    !updates.profileImagePublicId.startsWith(imageFolder)
+  ) {
+    throw createServiceError("The profile image does not belong to this account.", 403);
+  }
+
+  const currentUser = await User.findById(parsedUserId).select("profileImagePublicId");
+  if (!currentUser) throw createServiceError("User not found", 404);
+  const previousPublicId = currentUser.profileImagePublicId;
 
   const user = await User.findByIdAndUpdate(
     parsedUserId,
@@ -129,6 +141,14 @@ const updateMyProfile = async (userId, payload) => {
     throw createServiceError("User not found", 404);
   }
 
+  if (
+    previousPublicId &&
+    updates.profileImagePublicId !== undefined &&
+    previousPublicId !== updates.profileImagePublicId
+  ) {
+    await cloudinaryService.deleteImage(previousPublicId);
+  }
+
   return user;
 };
 
@@ -141,6 +161,41 @@ const updateLocationAnalyticsConsent = async (userId, consent) => {
 
   if (!user) throw createServiceError("User not found", 404);
   return { locationAnalyticsConsent: user.locationAnalyticsConsent };
+};
+
+const getAdminUsers = async ({ page, limit, search }) => {
+  const filter = {};
+  if (search) {
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const expression = new RegExp(escapedSearch, "i");
+    filter.$or = [
+      { name: expression },
+      { email: expression },
+      { phoneNumber: expression },
+    ];
+  }
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select("name email phoneNumber address profileImage roles userStatus emailVerifiedAt locationAnalyticsConsent createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    User.countDocuments(filter),
+  ]);
+  return {
+    users,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
+};
+
+const getAdminUserById = async (userId) => {
+  const user = await User.findById(parseUserId(userId))
+    .select("name email phoneNumber address profileImage profileImagePublicId roles userStatus emailVerifiedAt locationAnalyticsConsent createdAt updatedAt")
+    .lean();
+  if (!user) throw createServiceError("User not found", 404);
+  return user;
 };
 
 // ================================
@@ -250,6 +305,8 @@ module.exports = {
   getMyProfile,
   updateMyProfile,
   updateLocationAnalyticsConsent,
+  getAdminUsers,
+  getAdminUserById,
   authenticateUser,
   createEmailVerificationToken,
   verifyEmail,

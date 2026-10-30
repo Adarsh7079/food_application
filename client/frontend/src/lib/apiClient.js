@@ -45,7 +45,7 @@ apiClient.interceptors.response.use(
       if (!nextToken) throw new Error("No access token returned by refresh endpoint.");
       accessToken = nextToken;
       onAccessTokenChanged(nextToken);
-      originalRequest.headers.Authorization = `Bearer ${nextToken}`;
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return apiClient(originalRequest);
     } catch (refreshError) {
       accessToken = "";

@@ -11,6 +11,8 @@ const {
   publicProductsQuerySchema,
   productAvailabilitySchema,
   productIdParamSchema,
+  productImageSchema,
+  productImagesSchema,
   productReviewSchema,
 } = require("../validations/schemas");
 
@@ -22,6 +24,8 @@ router.put("/products/:productId/reviews", authenticate, authorize(USER_ROLE.cus
 router.get("/categories", productController.listCategories);
 router.get("/restaurants/:restaurantId/products", authenticate, authorize(USER_ROLE.restaurant), restaurantOwner, productController.listRestaurantProducts);
 router.post("/restaurants/:restaurantId/products", authenticate, authorize(USER_ROLE.restaurant), restaurantOwner, requireApprovedRestaurant, validate(createProductSchema), productController.createProduct);
+router.patch("/restaurants/:restaurantId/products/:productId/image", authenticate, authorize(USER_ROLE.restaurant), restaurantOwner, requireApprovedRestaurant, validate(productIdParamSchema, "params"), validate(productImageSchema), productController.updateProductImage);
+router.patch("/restaurants/:restaurantId/products/:productId/images", authenticate, authorize(USER_ROLE.restaurant), restaurantOwner, requireApprovedRestaurant, validate(productIdParamSchema, "params"), validate(productImagesSchema), productController.updateProductImages);
 router.patch("/restaurants/:restaurantId/products/:productId/availability", authenticate, authorize(USER_ROLE.restaurant), restaurantOwner, requireApprovedRestaurant, validate(productAvailabilitySchema), productController.updateProductAvailability);
 
 module.exports = router;

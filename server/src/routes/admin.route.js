@@ -12,11 +12,27 @@ const {
   reviewRestaurantSchema,
   updateRestaurantSuspensionSchema,
   createCategorySchema,
+  paginationSchema,
+  userIdParamSchema,
 } = require("../validations/schemas");
 
 const router = express.Router();
 const requireSuperAdmin = [authenticate, authorize(USER_ROLE.superAdmin)];
 const requirePlatformAdmin = [authenticate, authorize(USER_ROLE.admin, USER_ROLE.superAdmin)];
+
+router.get(
+  "/users",
+  ...requireSuperAdmin,
+  validate(paginationSchema, "query"),
+  adminController.getUsers,
+);
+
+router.get(
+  "/users/:userId",
+  ...requireSuperAdmin,
+  validate(userIdParamSchema, "params"),
+  adminController.getUser,
+);
 
 router.post(
   "/categories",

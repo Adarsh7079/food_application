@@ -10,6 +10,7 @@ const productRouter = require("./routes/product.route");
 const orderRouter = require("./routes/order.route");
 const contactRouter = require("./routes/contact.route");
 const locationAnalyticsRouter = require("./routes/locationAnalytics.route");
+const uploadRouter = require("./routes/upload.route");
 const sendApiError = require("./utils/sendApiError");
 
 const app = express();
@@ -24,6 +25,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use("/api/v1/uploads", uploadRouter);
 
 app.use(
   express.json({

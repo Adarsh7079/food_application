@@ -84,6 +84,7 @@ const App = () => {
           <Route index element={<><ApiDashboardHome role="superAdmin" /><div className="mt-6"><LocationAnalyticsPanel /></div></>} />
           <Route path="approvals" element={<ApiWorkspacePage role="superAdmin" section="approvals" />} />
           <Route path="restaurants" element={<ApiWorkspacePage role="superAdmin" section="restaurants" />} />
+          <Route path="users" element={<ApiWorkspacePage role="superAdmin" section="users" />} />
           <Route path="categories" element={<ApiWorkspacePage role="superAdmin" section="categories" />} />
         </Route>
         <Route path="/dashboard" element={<RoleRoute allowed={["restaurant", "admin", "superAdmin"]}><Navigate to="/" replace /></RoleRoute>} />

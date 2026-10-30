@@ -3,12 +3,26 @@ const Category = require("../models/category.model");
 const Restaurant = require("../models/restaurant.model");
 const ProductReview = require("../models/productReview.model");
 const ApiError = require("../utils/ApiError");
+const cloudinaryService = require("./cloudinary.service");
 const { PRODUCT_STATUS } = require("../utils/constants");
 const { RESTAURANT_STATUS, RESTAURANT_OPERATIONAL_STATUS } = require("../utils/constants");
 
-const createProduct = async (restaurantId, productData) => {
-  const { name, description, price, category, image, foodType, discount } =
+const productImageFolder = (userId, restaurantId) =>
+  `food_application/users/${userId}/restaurants/${restaurantId}/products/`;
+
+const validateProductImageId = (imagePublicId, userId, restaurantId) => {
+  if (imagePublicId && !imagePublicId.startsWith(productImageFolder(userId, restaurantId))) {
+    throw new ApiError(403, "The menu image does not belong to this restaurant owner.");
+  }
+};
+
+const createProduct = async (restaurantId, productData, userId) => {
+  const { name, description, price, category, image, imagePublicId, images = [], foodType, discount } =
     productData;
+
+  validateProductImageId(imagePublicId, userId, restaurantId);
+  images.forEach((item) => validateProductImageId(item.publicId, userId, restaurantId));
+  const primaryImage = images[0] || (image ? { url: image, publicId: imagePublicId } : null);
 
   // 1. Verify that the category exists.
   const existingCategory = await Category.findById(category);
@@ -23,7 +37,9 @@ const createProduct = async (restaurantId, productData) => {
     description,
     price,
     category,
-    image,
+    image: primaryImage?.url || null,
+    imagePublicId: primaryImage?.publicId || null,
+    images,
     foodType,
     discount,
     restaurant: restaurantId,
@@ -31,6 +47,38 @@ const createProduct = async (restaurantId, productData) => {
     isAvailable: true,
   });
 
+  return product;
+};
+
+const setProductImage = async (restaurantId, userId, productId, imageData) => {
+  validateProductImageId(imageData.imagePublicId, userId, restaurantId);
+  const product = await Product.findOne({ _id: productId, restaurant: restaurantId });
+  if (!product) throw new ApiError(404, "Product not found for this restaurant");
+
+  const previousPublicId = product.imagePublicId;
+  product.image = imageData.image;
+  product.imagePublicId = imageData.imagePublicId;
+  await product.save();
+
+  if (previousPublicId && previousPublicId !== product.imagePublicId) {
+    await cloudinaryService.deleteImage(previousPublicId);
+  }
+  return product;
+};
+
+const setProductImages = async (restaurantId, userId, productId, images) => {
+  images.forEach((item) => validateProductImageId(item.publicId, userId, restaurantId));
+  const product = await Product.findOne({ _id: productId, restaurant: restaurantId });
+  if (!product) throw new ApiError(404, "Product not found for this restaurant");
+
+  const previousPublicIds = new Set([...(product.images || []).map((item) => item.publicId), product.imagePublicId].filter(Boolean));
+  const nextPublicIds = new Set(images.map((item) => item.publicId));
+  product.images = images;
+  product.image = images[0]?.url || null;
+  product.imagePublicId = images[0]?.publicId || null;
+  await product.save();
+
+  await Promise.all([...previousPublicIds].filter((publicId) => !nextPublicIds.has(publicId)).map((publicId) => cloudinaryService.deleteImage(publicId)));
   return product;
 };
 
@@ -109,6 +157,8 @@ const createCategory = async (name) => {
 
 module.exports = {
   createProduct,
+  setProductImage,
+  setProductImages,
   getPublicProducts,
   getRestaurantProducts,
   setProductAvailability,
