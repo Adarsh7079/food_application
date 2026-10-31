@@ -34,6 +34,10 @@ const Login = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (isSignup && (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password))) {
+      toast.error("Password must be at least 8 characters and include a lowercase letter, uppercase letter, and number.");
+      return;
+    }
     if (isSignup) dispatch(signupUser({ name, email, password }));
     else dispatch(loginUser({ email, password }));
   };
@@ -134,7 +138,7 @@ const Login = () => {
       </div>
       {isSignup && <input onChange={(event) => setName(event.target.value)} value={name} type="text" className="w-full border border-gray-800 px-3 py-2" placeholder="Name" required minLength={2} maxLength={80} />}
       <input onChange={(event) => setEmail(event.target.value)} value={email} type="email" className="w-full border border-gray-800 px-3 py-2" placeholder="Email" required autoComplete="email" />
-      <input onChange={(event) => setPassword(event.target.value)} value={password} type="password" className="w-full border border-gray-800 px-3 py-2" placeholder="Password" required autoComplete={isSignup ? "new-password" : "current-password"} minLength={isSignup ? 8 : 1} pattern={isSignup ? "(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}" : undefined} title={isSignup ? "Use 8+ characters with a lowercase letter, uppercase letter, and number." : undefined} />
+      <input onChange={(event) => setPassword(event.target.value)} value={password} type="password" className="w-full border border-gray-800 px-3 py-2" placeholder="Password" required autoComplete={isSignup ? "new-password" : "current-password"} minLength={isSignup ? 8 : 1} maxLength={72} title={isSignup ? "Use 8+ characters with a lowercase letter, uppercase letter, and number." : undefined} />
 
       <div className="mt-[-8px] flex w-full justify-between text-sm">
         <p className="text-gray-500">{isSignup ? "Use at least 8 characters." : ""}</p>
