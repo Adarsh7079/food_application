@@ -91,6 +91,22 @@ const productSchema = new mongoose.Schema(
       default: null,
     },
 
+    imagePublicId: {
+      type: String,
+      default: null,
+    },
+
+    images: {
+      type: [
+        {
+          url: { type: String, required: true },
+          publicId: { type: String, required: true },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
+
     // Product publication status
     status: {
       type: String,

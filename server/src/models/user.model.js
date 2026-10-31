@@ -63,6 +63,11 @@ const userSchema = new mongoose.Schema(
             default: null,
         },
 
+        profileImagePublicId: {
+            type: String,
+            default: null,
+        },
+
         address: {
             type: String,
             default: null,
@@ -92,6 +97,16 @@ const userSchema = new mongoose.Schema(
         emailVerifiedAt: {
             type: Date,
             default: null,
+        },
+
+        passwordResetToken: {
+            type: String,
+            select: false,
+        },
+
+        passwordResetExpires: {
+            type: Date,
+            select: false,
         },
 
         // Hashed refresh token

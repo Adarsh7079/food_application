@@ -75,6 +75,15 @@ const resendVerificationSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().regex(/^[a-f\d]{64}$/i, "Invalid password reset token"),
+  password: passwordSchema,
+});
+
 const contactEnquirySchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email(),
@@ -88,6 +97,16 @@ const updateProfileSchema = z
     phoneNumber: phoneNumber.optional(),
     address: z.string().trim().min(5).max(300).nullable().optional(),
     profileImage: z.url().max(2048).nullable().optional(),
+    profileImagePublicId: z.string().trim().max(255).nullable().optional(),
+  })
+  .superRefine((data, context) => {
+    if ((data.profileImage === undefined) !== (data.profileImagePublicId === undefined)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["profileImagePublicId"],
+        message: "Profile image URL and Cloudinary ID must be updated together",
+      });
+    }
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "Provide at least one field to update",
@@ -223,6 +242,7 @@ const updateOrderStatusSchema = z
 
 const idParamSchema = z.object({ id: objectId });
 const restaurantIdParamSchema = z.object({ restaurantId: objectId });
+const userIdParamSchema = z.object({ userId: objectId });
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -302,7 +322,20 @@ const createProductSchema = z.object({
   price: z.coerce.number().finite().positive().max(1000000),
   category: objectId,
   image: z.url().max(2048).nullable().optional(),
+  imagePublicId: z.string().trim().max(255).nullable().optional(),
+  images: z.array(z.object({
+    url: z.url().max(2048),
+    publicId: z.string().trim().min(1).max(255),
+  })).max(8).optional(),
   foodType: z.enum(["VEG", "NON_VEG", "EGG"]).default("VEG"),
+}).superRefine((data, context) => {
+  if (data.imagePublicId && !data.image) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["image"],
+      message: "A Cloudinary image ID requires its image URL",
+    });
+  }
 });
 
 const publicProductsQuerySchema = z.object({
@@ -314,6 +347,16 @@ const productAvailabilitySchema = z.object({
   restaurantId: objectId,
   isAvailable: z.boolean(),
 });
+const productImageSchema = z.object({
+  image: z.url().max(2048).nullable(),
+  imagePublicId: z.string().trim().max(255).nullable(),
+});
+const productImagesSchema = z.object({
+  images: z.array(z.object({
+    url: z.url().max(2048),
+    publicId: z.string().trim().min(1).max(255),
+  })).max(8),
+});
 const productIdParamSchema = z.object({ productId: objectId });
 const productReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -324,6 +367,7 @@ const createCategorySchema = z.object({
 });
 
 module.exports = {
+  passwordSchema,
   addressSchema,
   restaurantAddressSchema,
   userSchema,
@@ -331,6 +375,8 @@ module.exports = {
   loginSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   contactEnquirySchema,
   updateProfileSchema,
   locationAnalyticsConsentSchema,
@@ -345,6 +391,7 @@ module.exports = {
   updateOrderStatusSchema,
   idParamSchema,
   restaurantIdParamSchema,
+  userIdParamSchema,
   paginationSchema,
   restaurantRegistrationSchema,
   updateRestaurantSchema,
@@ -355,6 +402,8 @@ module.exports = {
   createProductSchema,
   publicProductsQuerySchema,
   productAvailabilitySchema,
+  productImageSchema,
+  productImagesSchema,
   productIdParamSchema,
   productReviewSchema,
   createCategorySchema,

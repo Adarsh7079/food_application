@@ -2,6 +2,7 @@ const restaurantService = require("../services/restaurant.service");
 const ApiResponse = require("../utils/ApiResponse");
 const sendApiError = require("../utils/sendApiError");
 const { STATUS_CODES } = require("../utils/constants");
+const userService = require("../services/user.service");
 
 const getRestaurants = async (req, res) => {
   try {
@@ -36,6 +37,28 @@ const getRestaurant = async (req, res) => {
     );
   } catch (error) {
     return sendApiError(res, error, "Failed to fetch restaurant");
+  }
+};
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await userService.getAdminUsers(req.validated.query);
+    return res.status(STATUS_CODES.OK).json(
+      new ApiResponse(STATUS_CODES.OK, users, "Users fetched successfully"),
+    );
+  } catch (error) {
+    return sendApiError(res, error, "Failed to fetch users");
+  }
+};
+
+const getUser = async (req, res) => {
+  try {
+    const user = await userService.getAdminUserById(req.validated.params.userId);
+    return res.status(STATUS_CODES.OK).json(
+      new ApiResponse(STATUS_CODES.OK, user, "User fetched successfully"),
+    );
+  } catch (error) {
+    return sendApiError(res, error, "Failed to fetch user");
   }
 };
 
@@ -88,6 +111,8 @@ const updateRestaurantSuspension = async (req, res) => {
 module.exports = {
   getRestaurants,
   getRestaurant,
+  getUsers,
+  getUser,
   reviewRestaurant,
   updateRestaurantSuspension,
 };

@@ -94,8 +94,33 @@ export const verifyUserEmail = createAsyncThunk(
   },
 );
 
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/api/v1/auth/forgot-password", { email }, { skipAuthRefresh: true });
+      if (!response.data.success) return rejectWithValue(response.data.message || "Could not send the reset link.");
+      return response.data.message || "If an account exists for this email, a password reset link has been sent.";
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, "Could not send the reset link."));
+    }
+  },
+);
+
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async ({ token, password }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/api/v1/auth/reset-password", { token, password }, { skipAuthRefresh: true });
+      if (!response.data.success) return rejectWithValue(response.data.message || "Could not reset your password.");
+      return response.data.message || "Password reset successfully.";
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, "Could not reset your password."));
+    }
+  },
+);
+
 export const resendVerificationEmail = createAsyncThunk(
-  "auth/resendVerificationEmail",
   async ({ email }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post("/api/v1/auth/resend-verification", { email }, { skipAuthRefresh: true });
@@ -118,6 +143,8 @@ const authSlice = createSlice({
     logoutStatus: "idle",
     verificationStatus: "idle",
     resendStatus: "idle",
+    forgotPasswordStatus: "idle",
+    resetPasswordStatus: "idle",
     error: null,
     message: null,
   },
@@ -175,6 +202,12 @@ const authSlice = createSlice({
       .addCase(verifyUserEmail.pending, (state) => { state.verificationStatus = "loading"; state.error = null; state.message = null; })
       .addCase(verifyUserEmail.fulfilled, (state, action) => { state.verificationStatus = "succeeded"; state.message = action.payload; })
       .addCase(verifyUserEmail.rejected, (state, action) => { state.verificationStatus = "failed"; state.error = action.payload; })
+      .addCase(forgotPassword.pending, (state) => { state.forgotPasswordStatus = "loading"; state.error = null; state.message = null; })
+      .addCase(forgotPassword.fulfilled, (state, action) => { state.forgotPasswordStatus = "succeeded"; state.message = action.payload; })
+      .addCase(forgotPassword.rejected, (state, action) => { state.forgotPasswordStatus = "failed"; state.error = action.payload; })
+      .addCase(resetPassword.pending, (state) => { state.resetPasswordStatus = "loading"; state.error = null; state.message = null; })
+      .addCase(resetPassword.fulfilled, (state, action) => { state.resetPasswordStatus = "succeeded"; state.message = action.payload; })
+      .addCase(resetPassword.rejected, (state, action) => { state.resetPasswordStatus = "failed"; state.error = action.payload; })
       .addCase(resendVerificationEmail.pending, (state) => { state.resendStatus = "loading"; state.error = null; state.message = null; })
       .addCase(resendVerificationEmail.fulfilled, (state, action) => { state.resendStatus = "succeeded"; state.message = action.payload; })
       .addCase(resendVerificationEmail.rejected, (state, action) => { state.resendStatus = "failed"; state.error = action.payload; })

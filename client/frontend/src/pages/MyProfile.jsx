@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyProfile, saveMyProfile } from "../store/features/profile/profileSlice";
 import { locationAnalyticsConsentUpdated } from "../store/features/auth/authSlice";
 import { getRole } from "../features/dashboard/routes/roles";
 import { apiClient, getApiErrorMessage } from "../lib/apiClient";
+import { deleteUploadedImage, uploadImage } from "../lib/imageUpload";
 
 const Field = ({ label, name, value, onChange, editing, type = "text", required = false }) => (
   <label className="block text-xs font-semibold text-[#627168]">
@@ -29,6 +30,10 @@ export default function MyProfile() {
   const [consentSaving, setConsentSaving] = useState(false);
   const [consentError, setConsentError] = useState("");
   const [locationConsent, setLocationConsent] = useState(false);
+  const [imageSaving, setImageSaving] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const photoInputRef = useRef(null);
 
   useEffect(() => {
     if (token) dispatch(fetchMyProfile());
@@ -76,6 +81,54 @@ export default function MyProfile() {
     }
   };
 
+  const updateProfileImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setImageSaving(true);
+    setImageError("");
+    let uploadedImage;
+    try {
+      uploadedImage = await uploadImage(file, { scope: "profile", token });
+      await dispatch(saveMyProfile({
+        profileImage: uploadedImage.url,
+        profileImagePublicId: uploadedImage.publicId,
+      })).unwrap();
+      setSaved(true);
+    } catch (requestError) {
+      if (uploadedImage) {
+        try {
+          const currentProfile = await dispatch(fetchMyProfile()).unwrap();
+          if (currentProfile.profileImagePublicId === uploadedImage.publicId) {
+            setImageError(getApiErrorMessage(requestError, "Could not update your profile photo."));
+            return;
+          }
+          await deleteUploadedImage({ publicId: uploadedImage.publicId, scope: "profile", token });
+        } catch (cleanupError) {
+          setImageError(`${getApiErrorMessage(requestError, "Could not update your profile photo.")} The new upload could not be removed: ${getApiErrorMessage(cleanupError, "Cloudinary deletion failed.")}`);
+          setImageSaving(false);
+          return;
+        }
+      }
+      setImageError(getApiErrorMessage(requestError, "Could not update your profile photo."));
+    } finally {
+      setImageSaving(false);
+    }
+  };
+
+  const removeProfileImage = async () => {
+    setImageSaving(true);
+    setImageError("");
+    try {
+      await dispatch(saveMyProfile({ profileImage: null, profileImagePublicId: null })).unwrap();
+      setSaved(true);
+    } catch (requestError) {
+      setImageError(getApiErrorMessage(requestError, "Could not remove your profile photo."));
+    } finally {
+      setImageSaving(false);
+    }
+  };
+
   const displayUser = profile || authUser;
   const initials = (displayUser?.name || "Customer").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const roleLabel = getRole(displayUser) === "customer" ? "Customer" : getRole(displayUser);
@@ -89,7 +142,20 @@ export default function MyProfile() {
     <section className="overflow-hidden rounded-3xl border border-[#e8ddc8] bg-white shadow-[0_18px_50px_-36px_rgba(15,45,34,.35)]">
       <div className="bg-[#123d30] px-6 py-7 text-white sm:px-9">
         <div className="flex flex-wrap items-center gap-4">
-          {displayUser?.profileImage ? <img src={displayUser.profileImage} alt="Profile" className="h-16 w-16 rounded-2xl object-cover ring-2 ring-white/25" /> : <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#f3d7a1] text-xl font-semibold text-[#123d30]">{initials}</div>}
+          <div className="relative h-20 w-20">
+            {displayUser?.profileImage ? <img src={displayUser.profileImage} alt="Profile" className="h-20 w-20 rounded-2xl object-cover ring-2 ring-white/25" /> : <div className="grid h-20 w-20 place-items-center rounded-2xl bg-[#f3d7a1] text-xl font-semibold text-[#123d30]">{initials}</div>}
+            {imageSaving && <div className="absolute inset-0 z-10 grid place-items-center rounded-2xl bg-[#123d30]/80" role="status" aria-label="Updating profile photo">
+              <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            </div>}
+            <button type="button" title={displayUser?.profileImage ? "Update or delete profile photo" : "Add profile photo"} aria-label={displayUser?.profileImage ? "Update or delete profile photo" : "Add profile photo"} disabled={imageSaving} onClick={() => displayUser?.profileImage ? setPhotoMenuOpen((open) => !open) : photoInputRef.current?.click()} className="absolute -bottom-2 -right-2 grid h-8 w-8 place-items-center rounded-full border-2 border-[#123d30] bg-white text-[#123d30] shadow-md transition hover:bg-[#f3d7a1] disabled:opacity-50">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="m14.7 5.3 4 4M4 20l4.8-1 10.5-10.5a2.8 2.8 0 0 0-4-4L4.8 15 4 20Z" /></svg>
+            </button>
+            {photoMenuOpen && <div className="absolute left-full top-3 z-20 ml-3 w-36 overflow-hidden rounded-xl border border-[#d9e2d5] bg-white py-1 text-xs shadow-xl">
+              <button type="button" onClick={() => { setPhotoMenuOpen(false); photoInputRef.current?.click(); }} className="block w-full px-4 py-2 text-left font-semibold text-[#337153] hover:bg-[#f3f8f3]">Update photo</button>
+              <button type="button" onClick={() => { setPhotoMenuOpen(false); removeProfileImage(); }} className="block w-full px-4 py-2 text-left font-semibold text-[#9a493b] hover:bg-red-50">Delete photo</button>
+            </div>}
+            <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={imageSaving} onChange={updateProfileImage} className="sr-only" />
+          </div>
           <div className="flex-1"><p className="text-xl font-semibold">{displayUser?.name || "Your account"}</p><p className="mt-1 text-sm text-white/65">{displayUser?.email || ""}</p></div>
           <span className="rounded-full border border-[#f3d7a1]/30 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#f3d7a1]">{roleLabel} account</span>
         </div>
@@ -98,8 +164,12 @@ export default function MyProfile() {
       <div className="p-6 sm:p-9">
         {loading && !profile ? <div className="py-10 text-center text-sm text-[#798078]">Loading your profile…</div> : <>
           {error && <div role="alert" className="mb-5 rounded-xl border border-[#f1d3cc] bg-[#fff3f0] px-4 py-3 text-sm text-[#9a493b]">{error}</div>}
+          {imageError && <div role="alert" className="mb-5 rounded-xl border border-[#f1d3cc] bg-[#fff3f0] px-4 py-3 text-sm text-[#9a493b]">{imageError}</div>}
           {saved && <div role="status" className="mb-5 rounded-xl border border-[#d6e7d7] bg-[#f0f8f0] px-4 py-3 text-sm text-[#34704d]">Your profile has been updated.</div>}
           <form onSubmit={onSubmit}>
+            <div className="mb-5">
+              <span className="text-xs text-[#858c84]">JPEG, PNG, or WebP · up to 5 MB</span>
+            </div>
             <div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="font-semibold text-[#244638]">Personal information</h2><p className="mt-1 text-xs text-[#858c84]">Your email is used for sign in and cannot be changed here.</p></div>{!editing && <button type="button" onClick={() => { setSaved(false); setEditing(true); }} className="rounded-full border border-[#d9e2d5] px-4 py-2 text-xs font-semibold text-[#337153] hover:bg-[#f3f8f3]">Edit profile</button>}</div>
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Full name" name="name" value={editing ? form.name : displayUser?.name} onChange={onChange} editing={editing} required />

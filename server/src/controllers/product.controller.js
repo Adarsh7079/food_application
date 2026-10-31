@@ -39,10 +39,38 @@ const listRestaurantProducts = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const product = await productService.createProduct(req.params.restaurantId, req.validated.body);
+    const product = await productService.createProduct(req.params.restaurantId, req.validated.body, req.user.userId);
     return res.status(201).json(new ApiResponse(201, product, "Product created successfully"));
   } catch (error) {
     return sendApiError(res, error, "Product creation failed");
+  }
+};
+
+const updateProductImage = async (req, res) => {
+  try {
+    const product = await productService.setProductImage(
+      req.params.restaurantId,
+      req.user.userId,
+      req.params.productId,
+      req.validated.body,
+    );
+    return res.status(200).json(new ApiResponse(200, product, "Product image updated"));
+  } catch (error) {
+    return sendApiError(res, error, "Product image update failed");
+  }
+};
+
+const updateProductImages = async (req, res) => {
+  try {
+    const product = await productService.setProductImages(
+      req.params.restaurantId,
+      req.user.userId,
+      req.params.productId,
+      req.validated.body.images,
+    );
+    return res.status(200).json(new ApiResponse(200, product, "Product photos updated"));
+  } catch (error) {
+    return sendApiError(res, error, "Product photos update failed");
   }
 };
 
@@ -99,6 +127,8 @@ module.exports = {
   createCategory,
   listRestaurantProducts,
   createProduct,
+  updateProductImage,
+  updateProductImages,
   updateProductAvailability,
   listProductReviews,
   getMyProductReview,
