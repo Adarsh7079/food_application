@@ -14,6 +14,8 @@ const {
   createCategorySchema,
   paginationSchema,
   userIdParamSchema,
+  updateProductSchema,
+  restaurantProductParamsSchema,
 } = require("../validations/schemas");
 
 const router = express.Router();
@@ -68,6 +70,21 @@ router.patch(
   validate(restaurantIdParamSchema, "params"),
   validate(reviewRestaurantSchema),
   adminController.reviewRestaurant,
+);
+
+router.get(
+  "/restaurants/:restaurantId/products",
+  ...requirePlatformAdmin,
+  validate(restaurantIdParamSchema, "params"),
+  adminController.getRestaurantProducts,
+);
+
+router.patch(
+  "/restaurants/:restaurantId/products/:productId",
+  ...requireSuperAdmin,
+  validate(restaurantProductParamsSchema, "params"),
+  validate(updateProductSchema),
+  adminController.updateRestaurantProduct,
 );
 
 router.patch(

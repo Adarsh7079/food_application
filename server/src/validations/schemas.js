@@ -358,6 +358,16 @@ const productImagesSchema = z.object({
   })).max(8),
 });
 const productIdParamSchema = z.object({ productId: objectId });
+const restaurantProductParamsSchema = z.object({ restaurantId: objectId, productId: objectId });
+const updateProductSchema = z.object({
+  name: z.string().trim().min(2).max(150).optional(),
+  description: z.string().trim().max(1000).optional(),
+  price: z.coerce.number().finite().positive().max(1000000).optional(),
+  category: objectId.optional(),
+  foodType: z.enum(["VEG", "NON_VEG", "EGG"]).optional(),
+  isAvailable: z.boolean().optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+}).refine((data) => Object.keys(data).length > 0, "At least one product field is required");
 const productReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -405,6 +415,8 @@ module.exports = {
   productImageSchema,
   productImagesSchema,
   productIdParamSchema,
+  updateProductSchema,
+  restaurantProductParamsSchema,
   productReviewSchema,
   createCategorySchema,
 };

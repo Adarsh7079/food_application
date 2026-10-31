@@ -189,6 +189,7 @@ const getAdminRestaurants = async (approvalStatus) => {
 
   return Restaurant.find(filter)
     .populate("owner", "name email")
+    .populate("reviewedBy", "name email")
     .sort({ createdAt: -1 });
 };
 
@@ -196,7 +197,7 @@ const getAdminRestaurantById = async (restaurantId) => {
   const restaurant = await Restaurant.findOne({
     _id: restaurantId,
     isDeleted: { $ne: true },
-  }).populate("owner", "name email");
+  }).populate("owner", "name email").populate("reviewedBy", "name email");
 
   if (!restaurant) {
     throw new ApiError(STATUS_CODES.NOT_FOUND, "Restaurant not found");
