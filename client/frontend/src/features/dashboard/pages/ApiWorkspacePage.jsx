@@ -41,7 +41,7 @@ export default function ApiWorkspacePage({ role, section }) {
       if (role === "restaurant") {
         const response = await axios.get("/api/v1/restaurants/me", requestConfig(token));
         const owned = response.data.data || [];
-        const selected = owned[0] || null;
+        const selected = owned.find((item) => item.approvalStatus === "APPROVED") || owned[0] || null;
         setRestaurant(selected);
         if (selected && section === "menu") {
           const [itemsResponse, categoryResponse] = await Promise.all([

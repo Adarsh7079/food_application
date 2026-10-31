@@ -11,7 +11,7 @@ const requireApprovedRestaurant = (req, res, next) => {
       );
     }
 
-    if (req.restaurant.approvalStatus !== RESTAURANT_STATUS.approved) {
+    if (String(req.restaurant.approvalStatus).toUpperCase() !== RESTAURANT_STATUS.approved) {
       throw new ApiError(
         STATUS_CODES.FORBIDDEN,
         "Your restaurant must be approved before performing this action",
