@@ -133,6 +133,22 @@ const getRestaurantProducts = async (restaurantId) =>
     .populate("category", "name slug")
     .sort({ createdAt: -1 });
 
+const updateAdminProduct = async (restaurantId, productId, updates) => {
+  const restaurant = await Restaurant.findById(restaurantId);
+  if (!restaurant) throw new ApiError(404, "Restaurant not found");
+  if (updates.category) {
+    const category = await Category.findById(updates.category);
+    if (!category) throw new ApiError(404, "Category not found");
+  }
+  const product = await Product.findOneAndUpdate(
+    { _id: productId, restaurant: restaurantId },
+    { $set: updates },
+    { new: true, runValidators: true },
+  ).populate("category", "name slug");
+  if (!product) throw new ApiError(404, "Product not found for this restaurant");
+  return product;
+};
+
 const setProductAvailability = async (restaurantId, productId, isAvailable) => {
   const product = await Product.findOneAndUpdate(
     { _id: productId, restaurant: restaurantId },
@@ -162,6 +178,7 @@ module.exports = {
   getPublicProducts,
   getRestaurantProducts,
   setProductAvailability,
+  updateAdminProduct,
   getCategories,
   createCategory,
 };

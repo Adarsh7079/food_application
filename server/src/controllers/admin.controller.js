@@ -3,6 +3,7 @@ const ApiResponse = require("../utils/ApiResponse");
 const sendApiError = require("../utils/sendApiError");
 const { STATUS_CODES } = require("../utils/constants");
 const userService = require("../services/user.service");
+const productService = require("../services/products.service");
 
 const getRestaurants = async (req, res) => {
   try {
@@ -108,6 +109,24 @@ const updateRestaurantSuspension = async (req, res) => {
   }
 };
 
+const getRestaurantProducts = async (req, res) => {
+  try {
+    const products = await productService.getRestaurantProducts(req.validated.params.restaurantId);
+    return res.status(STATUS_CODES.OK).json(new ApiResponse(STATUS_CODES.OK, products, "Restaurant products fetched successfully"));
+  } catch (error) { return sendApiError(res, error, "Failed to fetch restaurant products"); }
+};
+
+const updateRestaurantProduct = async (req, res) => {
+  try {
+    const product = await productService.updateAdminProduct(
+      req.validated.params.restaurantId,
+      req.validated.params.productId,
+      req.validated.body,
+    );
+    return res.status(STATUS_CODES.OK).json(new ApiResponse(STATUS_CODES.OK, product, "Product updated successfully"));
+  } catch (error) { return sendApiError(res, error, "Failed to update product"); }
+};
+
 module.exports = {
   getRestaurants,
   getRestaurant,
@@ -115,4 +134,6 @@ module.exports = {
   getUser,
   reviewRestaurant,
   updateRestaurantSuspension,
+  getRestaurantProducts,
+  updateRestaurantProduct,
 };
