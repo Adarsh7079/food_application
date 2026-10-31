@@ -5,7 +5,7 @@ const User = require("../models/user.model");
 
 const userService = require("../services/user.service");
 
-const { sendVerificationEmail } = require("../services/email.service");
+const { sendVerificationEmail, sendPasswordResetEmail } = require("../services/email.service");
 
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
@@ -102,6 +102,35 @@ const resendVerificationEmail = async (req, res) => {
       );
   } catch (error) {
     return sendApiError(res, error, "Resend verification request failed");
+  }
+};
+
+// ========================================
+// FORGOT / RESET PASSWORD
+// ========================================
+
+const forgotPassword = async (req, res) => {
+  try {
+    const resetRequest = await userService.createPasswordResetToken(req.validated.body.email);
+    if (resetRequest) {
+      await sendPasswordResetEmail({
+        email: resetRequest.user.email,
+        name: resetRequest.user.name,
+        token: resetRequest.token,
+      });
+    }
+    return res.status(200).json(new ApiResponse(200, null, "If an account exists for this email, a password reset link has been sent."));
+  } catch (error) {
+    return sendApiError(res, error, "Password reset request failed");
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    await userService.resetPassword(req.validated.body.token, req.validated.body.password);
+    return res.status(200).json(new ApiResponse(200, null, "Password reset successfully. You can now sign in."));
+  } catch (error) {
+    return sendApiError(res, error, "Password reset failed");
   }
 };
 
@@ -304,6 +333,8 @@ module.exports = {
   signup,
   verifyEmail,
   resendVerificationEmail,
+  forgotPassword,
+  resetPassword,
   login,
   refreshAccessToken,
   logout,

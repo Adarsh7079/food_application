@@ -8,6 +8,8 @@ const {
   loginSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } = require("../validations/schemas");
 
 const router = express.Router();
@@ -28,6 +30,10 @@ router.post(
   validate(resendVerificationSchema),
   authController.resendVerificationEmail,
 );
+
+// Password reset
+router.post("/forgot-password", validate(forgotPasswordSchema), authController.forgotPassword);
+router.post("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
 
 // Login
 router.post("/login", validate(loginSchema), authController.login);

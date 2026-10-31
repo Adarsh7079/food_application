@@ -64,30 +64,24 @@ const sendContactEnquiry = async ({ name, email, phone, message }) => {
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
-  let serverUrl = process.env.SERVER_URL;
-
-  if (!serverUrl && process.env.NODE_ENV === "production") {
-    throw new ApiError(
-      503,
-      "Email verification is not configured correctly. Contact the site administrator.",
-    );
-  }
-
-  serverUrl ||= `http://localhost:${process.env.PORT || 8000}`;
+  let websiteUrl = process.env.CLIENT_URL;
+  websiteUrl ||= process.env.NODE_ENV === "production"
+    ? "https://zaykanest.in"
+    : "http://localhost:5173";
 
   try {
-    const parsedServerUrl = new URL(serverUrl);
+    const parsedWebsiteUrl = new URL(websiteUrl);
 
     if (
       process.env.NODE_ENV === "production" &&
-      parsedServerUrl.protocol !== "https:"
+      parsedWebsiteUrl.protocol !== "https:"
     ) {
-      throw new Error("SERVER_URL must use HTTPS in production");
+      throw new Error("CLIENT_URL must use HTTPS in production");
     }
 
     const verificationUrl = new URL(
-      "/api/v1/auth/verify-email",
-      parsedServerUrl,
+      "/verify-email",
+      parsedWebsiteUrl,
     );
     verificationUrl.searchParams.set("token", token);
 
@@ -310,8 +304,37 @@ const sendWhatsAppOrderNotification = async (checkout) => {
   }
 };
 
+const sendPasswordResetEmail = async ({ email, name, token }) => {
+  let serverUrl = process.env.CLIENT_URL;
+  serverUrl ||= process.env.NODE_ENV === "production"
+    ? "https://zaykanest.in"
+    : "http://localhost:5173";
+
+  try {
+    const parsedServerUrl = new URL(serverUrl);
+    if (process.env.NODE_ENV === "production" && parsedServerUrl.protocol !== "https:") {
+      throw new Error("CLIENT_URL must use HTTPS in production");
+    }
+    const resetUrl = new URL("/reset-password", parsedServerUrl);
+    resetUrl.searchParams.set("token", token);
+    const resend = getResendClient();
+    const { data, error } = await resend.emails.send({
+      from: process.env.MAIL_FROM || DEFAULT_FROM,
+      to: [email],
+      subject: process.env.MAIL_PASSWORD_RESET_SUBJECT || "Reset your ZaykaNest password",
+      html: `<p>Hello,</p><p>Use the link below to reset your password. It expires in 1 hour.</p><p><a href="${resetUrl.toString()}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+    });
+    if (error) throw new Error("Password reset email delivery failed");
+    return data;
+  } catch (error) {
+    console.error("Password reset email delivery failed:", error);
+    throw error instanceof ApiError ? error : new ApiError(503, "Unable to send the password reset email. Please try again later.");
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
+  sendPasswordResetEmail,
   sendRestaurantApprovalNotification,
   sendOrderNotification,
   sendWhatsAppOrderNotification,

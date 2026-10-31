@@ -99,6 +99,16 @@ const userSchema = new mongoose.Schema(
             default: null,
         },
 
+        passwordResetToken: {
+            type: String,
+            select: false,
+        },
+
+        passwordResetExpires: {
+            type: Date,
+            select: false,
+        },
+
         // Hashed refresh token
         refreshToken: {
             type: String,

@@ -14,6 +14,8 @@ import Footer from "./components/Footer";
 import { ToastContainer } from "react-toastify";
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const ResendVerification = lazy(() => import("./pages/ResendVerification"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MyProfile = lazy(() => import("./pages/MyProfile"));
 const PartnerApplication = lazy(() => import("./pages/PartnerApplication"));
 const DashboardLayout = lazy(() => import("./features/dashboard/components/DashboardLayout"));
@@ -67,6 +69,8 @@ const App = () => {
         <Route path="/orders" element={<Orders />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/my-profile" element={<RoleRoute allowed={["customer", "restaurant", "admin", "superAdmin"]}><MyProfile /></RoleRoute>} />
         <Route path="/partner/apply" element={<RoleRoute allowed={["customer", "restaurant"]}><PartnerApplication /></RoleRoute>} />
         <Route path="/dashboard/restaurant" element={<RoleRoute allowed={["restaurant"]}><DashboardLayout role="restaurant" /></RoleRoute>}>

@@ -138,7 +138,7 @@ const Login = () => {
 
       <div className="mt-[-8px] flex w-full justify-between text-sm">
         <p className="text-gray-500">{isSignup ? "Use at least 8 characters." : ""}</p>
-        {isSignup ? <button type="button" onClick={() => switchState("Login")} className="cursor-pointer">Login here</button> : <button type="button" onClick={() => switchState("Sign Up")} className="cursor-pointer">Create account</button>}
+        {isSignup ? <button type="button" onClick={() => switchState("Login")} className="cursor-pointer">Login here</button> : <><button type="button" onClick={() => navigate("/forgot-password")} className="cursor-pointer text-[#31594b] hover:underline">Forgot password?</button><button type="button" onClick={() => switchState("Sign Up")} className="cursor-pointer">Create account</button></>}
       </div>
       {!isSignup && <button type="button" onClick={() => navigate("/resend-verification")} className="self-end text-sm text-blue-600 hover:underline">Resend verification email</button>}
       <button type="submit" disabled={isLoading} className="mt-4 bg-black px-8 py-2 font-light text-white disabled:cursor-wait disabled:opacity-60">{isLoading ? (isSignup ? "Creating account…" : "Signing in…") : (isSignup ? "Sign Up" : "Sign In")}</button>

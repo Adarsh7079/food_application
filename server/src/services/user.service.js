@@ -9,6 +9,7 @@ const {
   loginSchema,
   updateProfileSchema,
   idParamSchema,
+  passwordSchema,
 } = require("../validations/schemas");
 
 // ================================
@@ -298,6 +299,38 @@ const resendEmailVerification = async (email) => {
   };
 };
 
+const createPasswordResetToken = async (email) => {
+  const parsedEmail = registerSchema.shape.email.parse(email);
+  const user = await User.findOne({ email: parsedEmail });
+  if (!user) return null;
+
+  const token = crypto.randomBytes(32).toString("hex");
+  user.passwordResetToken = crypto.createHash("sha256").update(token).digest("hex");
+  user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+  await user.save({ validateBeforeSave: false });
+  return { user, token };
+};
+
+const resetPassword = async (token, password) => {
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const user = await User.findOne({
+    passwordResetToken: tokenHash,
+    passwordResetExpires: { $gt: new Date() },
+  }).select("+passwordResetToken +passwordResetExpires +refreshToken +authTokenVersion");
+
+  if (!user) {
+    throw createServiceError("This password reset link is invalid or has expired", 400);
+  }
+
+  user.password = passwordSchema.parse(password);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  user.refreshToken = undefined;
+  user.authTokenVersion += 1;
+  await user.save();
+  return user;
+};
+
 module.exports = {
   createUser,
   getUserById,
@@ -311,4 +344,6 @@ module.exports = {
   createEmailVerificationToken,
   verifyEmail,
   resendEmailVerification,
+  createPasswordResetToken,
+  resetPassword,
 };

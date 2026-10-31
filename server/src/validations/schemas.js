@@ -75,6 +75,15 @@ const resendVerificationSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().regex(/^[a-f\d]{64}$/i, "Invalid password reset token"),
+  password: passwordSchema,
+});
+
 const contactEnquirySchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email(),
@@ -358,6 +367,7 @@ const createCategorySchema = z.object({
 });
 
 module.exports = {
+  passwordSchema,
   addressSchema,
   restaurantAddressSchema,
   userSchema,
@@ -365,6 +375,8 @@ module.exports = {
   loginSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   contactEnquirySchema,
   updateProfileSchema,
   locationAnalyticsConsentSchema,
