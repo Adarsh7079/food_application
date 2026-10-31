@@ -26,11 +26,12 @@ export default function ApiDashboardHome({ role }) {
       if (role === "restaurant") {
         const response = await axios.get("/api/v1/restaurants/me", authConfig(token));
         const owned = response.data.data || [];
-        setRestaurant(owned[0] || null);
-        if (owned[0]) {
+        const selectedRestaurant = owned.find((item) => item.approvalStatus === "APPROVED") || owned[0] || null;
+        setRestaurant(selectedRestaurant);
+        if (selectedRestaurant) {
           const [orderResponse, productResponse] = await Promise.all([
-            axios.get("/api/v1/orders/restaurants/" + owned[0]._id, authConfig(token)),
-            axios.get("/api/v1/restaurants/" + owned[0]._id + "/products", authConfig(token)),
+            axios.get("/api/v1/orders/restaurants/" + selectedRestaurant._id, authConfig(token)),
+            axios.get("/api/v1/restaurants/" + selectedRestaurant._id + "/products", authConfig(token)),
           ]);
           setOrders(orderResponse.data.data || []); setProducts(productResponse.data.data || []);
         }

@@ -169,7 +169,11 @@ const getMyRestaurant = async (userId) => {
     isDeleted: { $ne: true },
   }).sort({ createdAt: -1 });
 
-  return restaurants;
+  return restaurants.sort((a, b) => {
+    if (a.approvalStatus === RESTAURANT_STATUS.approved && b.approvalStatus !== RESTAURANT_STATUS.approved) return -1;
+    if (b.approvalStatus === RESTAURANT_STATUS.approved && a.approvalStatus !== RESTAURANT_STATUS.approved) return 1;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
 };
 
 // ========================================
@@ -428,7 +432,7 @@ const updateOperationalStatus = async (
     );
   }
 
-  if (restaurant.approvalStatus !== RESTAURANT_STATUS.approved) {
+  if (String(restaurant.approvalStatus).toUpperCase() !== RESTAURANT_STATUS.approved) {
     throw new ApiError(
       STATUS_CODES.FORBIDDEN,
       "Only approved restaurants can change operational status"
