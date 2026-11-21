@@ -145,7 +145,7 @@ const Login = () => {
         {isSignup ? <button type="button" onClick={() => switchState("Login")} className="cursor-pointer">Login here</button> : <><button type="button" onClick={() => navigate("/forgot-password")} className="cursor-pointer text-[#31594b] hover:underline">Forgot password?</button><button type="button" onClick={() => switchState("Sign Up")} className="cursor-pointer">Create account</button></>}
       </div>
       {!isSignup && <button type="button" onClick={() => navigate("/resend-verification")} className="self-end text-sm text-blue-600 hover:underline">Resend verification email</button>}
-      <button type="submit" disabled={isLoading} className="mt-4 bg-black px-8 py-2 font-light text-white disabled:cursor-wait disabled:opacity-60">{isLoading ? (isSignup ? "Creating account…" : "Signing in…") : (isSignup ? "Sign Up" : "Sign In")}</button>
+      <button type="submit" disabled={isLoading} className="home-primary-button mt-4 rounded-xl px-8 py-2 font-semibold transition disabled:cursor-wait disabled:opacity-60">{isLoading ? (isSignup ? "Creating account…" : "Signing in…") : (isSignup ? "Sign Up" : "Sign In")}</button>
     </form>
     {needsLocationConsent && (
       <div className="fixed inset-0 z-[3000] grid place-items-center bg-[#0d2d22]/70 p-4 backdrop-blur-sm">
@@ -156,8 +156,8 @@ const Login = () => {
           </p>
           {consentError && <p role="alert" className="mt-4 text-sm text-red-700">{consentError}</p>}
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button type="button" disabled={consentSaving} onClick={() => chooseLocationConsent(false)} className="rounded-full border border-[#d9c9ab] px-5 py-3 text-sm font-semibold text-[#31594b] disabled:opacity-50">Not now</button>
-            <button type="button" disabled={consentSaving} onClick={() => chooseLocationConsent(true)} className="rounded-full bg-[#123d30] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{consentSaving ? "Saving…" : "Allow approximate location"}</button>
+            <button type="button" disabled={consentSaving} onClick={() => chooseLocationConsent(false)} className="home-secondary-button rounded-full border px-5 py-3 text-sm font-semibold disabled:opacity-50">Not now</button>
+            <button type="button" disabled={consentSaving} onClick={() => chooseLocationConsent(true)} className="home-primary-button rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-50">{consentSaving ? "Saving…" : "Allow approximate location"}</button>
           </div>
         </section>
       </div>

@@ -18,6 +18,8 @@ import { logoutUser } from "../store/features/auth/authSlice";
 import { getRole } from "../features/dashboard/routes/roles";
 import { toast } from "react-toastify";
 import { getCurrentLocation, getReadableAddress } from "../lib/location";
+import { ChevronDown, MapPin, Search } from "lucide-react";
+
 
 const Navbar = () => {
   const [visible, setVisible] =
@@ -67,7 +69,7 @@ const Navbar = () => {
         if (!isActive || !address) return;
         setDeliveryLocation((current) => (
           current.coordinates?.latitude === coordinates.latitude &&
-          current.coordinates?.longitude === coordinates.longitude
+            current.coordinates?.longitude === coordinates.longitude
             ? { ...current, address }
             : current
         ));
@@ -169,32 +171,65 @@ const Navbar = () => {
 
       <header className="sticky top-0 z-[1000] w-full border-b border-[#d9c9ab] bg-[#f4ebdc]/90 shadow-[0_8px_30px_-18px_rgba(18,61,48,0.35)] backdrop-blur-xl">
 
-        <div className="flex items-center justify-between py-3 px-2 sm:px-8 font-medium">
+        <div className="flex items-center justify-between gap-3 px-2 py-3 font-medium sm:px-8">
 
           {/* =================================================
               LOGO
           ================================================== */}
 
-          <Link
-            to="/"
-            className="flex items-center gap-2"
-            aria-label="ZaykaNest home"
-          >
-            <img
-              src="/logo.png"
-              alt="ZaykaNest"
-              className="h-11 w-11 rounded-full object-cover sm:h-14 sm:w-14 ring-2 ring-[#123d30]"
-            />
-            <span className="hidden font-serif text-xl font-bold tracking-tight text-[#1a4f41] sm:inline sm:text-2xl">
-              ZaykaNest
-            </span>
-          </Link>
+          <div className="flex shrink-0 items-center gap-4">
+            <div>
+              <Link
+                to="/"
+                className="flex items-center gap-2"
+                aria-label="ZaykaNest home"
+              >
+                <img
+                  src="/logo.png"
+                  alt="ZaykaNest"
+                  className="h-11 w-11 rounded-full object-cover sm:h-14 sm:w-14 ring-2 ring-[#123d30]"
+                />
+                <span className="hidden font-serif text-xl font-bold tracking-tight text-[#1a4f41] sm:inline sm:text-2xl">
+                  ZaykaNest
+                </span>
+              </Link>
+
+            </div>
+          </div>
+
+          <div className="hidden h-14 min-w-0 max-w-[704px] flex-1 items-center rounded-xl border border-[#e5e5e5] bg-white px-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] md:flex">
+            <button
+              type="button"
+              onClick={() => setIsLocationPickerOpen(true)}
+              className="flex min-w-0 max-w-[38%] shrink-0 items-center gap-2 text-left text-[#52665d] sm:px-1"
+              aria-label={`Delivery location: ${deliveryLocation.label}. Change location`}
+            >
+              <MapPin aria-hidden="true" className="h-5 w-5 shrink-0 text-[#e85d75]" />
+              <span className="max-w-40 truncate text-sm font-medium">
+                {deliveryLocation.label}
+              </span>
+              <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-[#4b5563]" />
+            </button>
+
+            <span aria-hidden="true" className="mx-3 h-7 w-px shrink-0 bg-[#d9d9d9]" />
+
+            <label className="flex min-w-0 flex-1 items-center gap-3">
+              <Search aria-hidden="true" className="h-5 w-5 shrink-0 text-[#737373]" strokeWidth={1.7} />
+              <input
+                value={search}
+                onChange={handleSearchChange}
+                className="min-w-0 flex-1 bg-transparent text-sm text-[#123d30] outline-none placeholder:text-[#858585]"
+                placeholder="Search dish"
+                aria-label="Search dish"
+              />
+            </label>
+          </div>
 
           {/* =================================================
               DESKTOP MENU
           ================================================== */}
 
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-[#2f5d51] bg-[#123d30]/80 p-1.5 text-sm text-[#f3d7a1] shadow-inner">
+          {/* <div className="hidden sm:flex items-center gap-2 rounded-full border border-[#2f5d51] bg-[#123d30]/80 p-1.5 text-sm text-[#f3d7a1] shadow-inner">
 
             <NavLink
               to="/"
@@ -224,7 +259,7 @@ const Navbar = () => {
               CONTACT
             </NavLink>
 
-          </div>
+          </div> */}
 
           {/* =================================================
               RIGHT SIDE
@@ -232,44 +267,17 @@ const Navbar = () => {
 
           <div className="flex items-center gap-3">
 
-            <button
-              type="button"
-              onClick={() => setIsLocationPickerOpen(true)}
-              className="hidden max-w-52 items-start gap-2 text-left text-[#123d30] lg:flex"
-              aria-label={`Delivery location: ${deliveryLocation.label}. Change location`}
-            >
-              <span aria-hidden="true" className="mt-0.5 text-base">⌖</span>
-              <span className="min-w-0">
-                <span className="flex items-center gap-1 text-xs font-semibold">
-                  {deliveryLocation.label}
-                  <span aria-hidden="true">⌄</span>
-                </span>
-                <span className="block truncate text-[10px] font-normal text-[#52665d]">
-                  {locationSubtitle}
-                </span>
-              </span>
-            </button>
+
 
             {/* SEARCH */}
-
-            <label className="hidden items-center gap-2 rounded-full border border-[#d9c9ab] bg-[#f7f1e7] px-3 py-2 md:flex">
-              <img className="h-4 w-4" src={assets.search_icon} alt="" />
-              <input
-                value={search}
-                onChange={handleSearchChange}
-                className="w-28 bg-transparent text-sm text-[#123d30] outline-none placeholder:text-[#5d7a70] lg:w-40"
-                placeholder="Search dishes"
-                aria-label="Search dishes"
-              />
-            </label>
 
             <button
               type="button"
               onClick={() => navigate("/menu")}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2f5d51] bg-[#f3d7a1] text-[#123d30] transition hover:scale-105 hover:bg-[#efc77e] md:hidden"
+              className="home-icon-button flex h-10 w-10 items-center justify-center rounded-full border transition hover:scale-105 md:hidden"
               aria-label="Search menu"
             >
-              <img className="h-5 w-5" src={assets.search_icon} alt="" />
+              <Search aria-hidden="true" className="h-5 w-5" />
             </button>
 
             {/* =================================================
@@ -294,58 +302,58 @@ const Navbar = () => {
                 </button>
 
                 {isProfileMenuOpen && (
-                <div className="absolute right-full top-0 z-[1100] pr-2">
+                  <div className="absolute right-full top-0 z-[1100] pr-2">
 
-                  <div role="menu" className="flex w-56 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
+                    <div role="menu" className="flex w-56 flex-col gap-2 rounded-xl border border-gray-100 bg-white px-4 py-3 text-gray-500 shadow-xl">
 
-                    <div className="mb-1 flex items-center gap-3 border-b border-gray-100 pb-2">
-                      {currentUser?.profileImage ? <img src={currentUser.profileImage} alt="" className="h-10 w-10 rounded-full object-cover" /> : <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8f0e9] text-sm font-bold text-[#24503f]">{currentUser?.name?.slice(0, 1)?.toUpperCase() || "U"}</div>}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[#244638]">{currentUser?.name || "Your account"}</p>
-                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a1783c]">{roleLabel} account</p>
+                      <div className="mb-1 flex items-center gap-3 border-b border-gray-100 pb-2">
+                        {currentUser?.profileImage ? <img src={currentUser.profileImage} alt="" className="h-10 w-10 rounded-full object-cover" /> : <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8f0e9] text-sm font-bold text-[#24503f]">{currentUser?.name?.slice(0, 1)?.toUpperCase() || "U"}</div>}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#244638]">{currentUser?.name || "Your account"}</p>
+                          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a1783c]">{roleLabel} account</p>
+                        </div>
                       </div>
+
+                      {dashboardPath && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate(dashboardPath); }} className="text-left font-semibold text-[#31594b] transition-colors hover:text-black">Dashboard</button>}
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsProfileMenuOpen(false); navigate("/my-profile"); }}
+                        className="text-left transition-colors hover:text-black"
+                      >
+                        My Profile
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsProfileMenuOpen(false); navigate("/orders"); }}
+                        className="text-left transition-colors hover:text-black"
+                      >
+                        Orders
+                      </button>
+
+                      {role === "customer" && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate("/partner/apply"); }} className="text-left transition-colors hover:text-black">Become a restaurant partner</button>}
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsProfileMenuOpen(false); logout(); }}
+                        className="text-left transition-colors hover:text-black"
+                      >
+                        Logout
+                      </button>
+
                     </div>
 
-                    {dashboardPath && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate(dashboardPath); }} className="text-left font-semibold text-[#31594b] transition-colors hover:text-black">Dashboard</button>}
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => { setIsProfileMenuOpen(false); navigate("/my-profile"); }}
-                      className="text-left transition-colors hover:text-black"
-                    >
-                      My Profile
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => { setIsProfileMenuOpen(false); navigate("/orders"); }}
-                      className="text-left transition-colors hover:text-black"
-                    >
-                      Orders
-                    </button>
-
-                    {role === "customer" && <button type="button" role="menuitem" onClick={() => { setIsProfileMenuOpen(false); navigate("/partner/apply"); }} className="text-left transition-colors hover:text-black">Become a restaurant partner</button>}
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => { setIsProfileMenuOpen(false); logout(); }}
-                      className="text-left transition-colors hover:text-black"
-                    >
-                      Logout
-                    </button>
-
                   </div>
-
-                </div>
                 )}
               </div>
             ) : (
               <Link
                 to="/login"
-                className="rounded-full border border-[#2f5d51] bg-[#123d30] px-4 py-2 text-sm font-semibold text-[#f3d7a1] transition hover:bg-[#1d4d3e]"
+                className="home-primary-button rounded-full px-4 py-2 text-sm font-semibold transition"
               >
                 Login
               </Link>
@@ -407,18 +415,18 @@ const Navbar = () => {
 
         </div>
 
-        <div className="border-t border-[#d9c9ab]/70 px-4 py-2 sm:px-8 lg:hidden">
+        <div className="border-t border-[#d9c9ab]/70 px-4 py-2 sm:px-8 md:hidden">
           <button
             type="button"
             onClick={() => setIsLocationPickerOpen(true)}
             className="flex w-full items-start gap-2 text-left text-[#123d30]"
             aria-label={`Delivery location: ${deliveryLocation.label}. Change location`}
           >
-            <span aria-hidden="true" className="mt-0.5 text-base">⌖</span>
+            <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#e85d75]" />
             <span className="min-w-0">
               <span className="flex items-center gap-1 text-xs font-semibold">
                 {deliveryLocation.label}
-                <span aria-hidden="true">⌄</span>
+                <ChevronDown aria-hidden="true" className="h-3 w-3 shrink-0" />
               </span>
               <span className="block truncate text-[10px] font-normal text-[#52665d]">
                 {locationSubtitle}
@@ -531,7 +539,7 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(false)
               }
-              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
               to="/"
             >
               HOME
@@ -541,7 +549,7 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(false)
               }
-              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
               to="/menu"
             >
               MENU
@@ -551,7 +559,7 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(false)
               }
-              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
               to="/about"
             >
               ABOUT
@@ -561,7 +569,7 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(false)
               }
-              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+              className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
               to="/contact"
             >
               CONTACT
@@ -571,14 +579,14 @@ const Navbar = () => {
               <>
                 {dashboardPath && <NavLink
                   onClick={() => setVisible(false)}
-                  className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+                  className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
                   to={dashboardPath}
                 >
                   DASHBOARD
                 </NavLink>}
                 <NavLink
                   onClick={() => setVisible(false)}
-                  className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+                  className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
                   to="/my-profile"
                 >
                   MY PROFILE
@@ -587,7 +595,7 @@ const Navbar = () => {
             ) : (
               <NavLink
                 onClick={() => setVisible(false)}
-                className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+                className={({ isActive }) => `block rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
                 to="/login"
               >
                 LOGIN
@@ -600,7 +608,7 @@ const Navbar = () => {
               onClick={() =>
                 setVisible(false)
               }
-              className={({ isActive }) => `flex items-center justify-between rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "bg-[#123d30] text-[#f7f1e7] shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
+              className={({ isActive }) => `flex items-center justify-between rounded-2xl px-5 py-4 text-sm font-bold tracking-wide transition ${isActive ? "home-primary-button shadow-lg" : "bg-white/70 text-[#123d30] hover:bg-[#f0e0c7]"}`}
               to="/cart"
             >
 
@@ -660,7 +668,10 @@ const Navbar = () => {
                 className="w-full bg-transparent text-sm outline-none placeholder:text-[#82909f]"
               />
               {locationSearch.trim() && (
-                <button type="submit" className="shrink-0 text-xs font-semibold text-[#7d2946]">
+                <button
+                  type="submit"
+                  className="shrink-0 text-xs font-semibold text-[#c2410c]"
+                >
                   Use address
                 </button>
               )}
@@ -732,7 +743,7 @@ const Navbar = () => {
                         setVisible(false);
                         navigate("/my-profile");
                       }}
-                      className="mt-3 rounded-lg bg-[#7d2946] px-6 py-3 text-sm font-semibold text-white"
+                      className="home-primary-button mt-3 rounded-lg px-6 py-3 text-sm font-semibold"
                     >
                       Add address to profile
                     </button>
@@ -755,7 +766,7 @@ const Navbar = () => {
                       setVisible(false);
                       navigate("/login");
                     }}
-                    className="mt-4 rounded-lg bg-[#7d2946] px-8 py-3 text-sm font-semibold text-white shadow-sm"
+                    className="home-primary-button mt-4 rounded-lg px-8 py-3 text-sm font-semibold shadow-sm"
                   >
                     Log In
                   </button>

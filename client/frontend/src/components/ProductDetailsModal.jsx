@@ -200,7 +200,7 @@ const ProductDetailsModal = ({ product, currency = "₹", onClose, onAdd }) => {
           <button
             type="button"
             onClick={() => onAdd(product)}
-            className="mt-6 rounded-xl bg-[#123d30] px-5 py-3 text-sm font-bold text-[#fffaf2] transition hover:bg-[#2d6756] active:scale-[0.98]"
+            className="home-primary-button mt-6 rounded-xl px-5 py-3 text-sm font-bold transition active:scale-[0.98]"
           >
             Add to cart
           </button>
@@ -261,7 +261,7 @@ const ProductDetailsModal = ({ product, currency = "₹", onClose, onAdd }) => {
                 <button
                   type="submit"
                   disabled={!rating || reviewSubmitting}
-                  className="rounded-xl bg-[#123d30] px-5 py-3 text-sm font-bold text-[#fffaf2] transition hover:bg-[#2d6756] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="home-primary-button rounded-xl px-5 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {reviewSubmitting ? "Saving…" : myReview ? "Update rating" : "Submit rating"}
                 </button>

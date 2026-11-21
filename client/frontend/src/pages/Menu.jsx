@@ -276,8 +276,8 @@ const Menu = () => {
               duration-300
               ${
                 activeTab === "Veg"
-                  ? "bg-[#123d30] text-[#f7f1e7] shadow-md scale-105"
-                  : "text-[#163d34] hover:bg-white hover:text-[#123d30]"
+                ? "home-primary-button shadow-md scale-105"
+                : "text-[#163d34] hover:bg-white hover:text-[#c2410c]"
               }
             `}
           >
@@ -310,8 +310,8 @@ const Menu = () => {
               ${
                 activeTab ===
                 "Non-Veg"
-                  ? "bg-[#123d30] text-[#f7f1e7] shadow-md scale-105"
-                  : "text-[#163d34] hover:bg-white hover:text-[#123d30]"
+                  ? "home-primary-button shadow-md scale-105"
+                  : "text-[#163d34] hover:bg-white hover:text-[#c2410c]"
               }
             `}
           >
@@ -594,7 +594,7 @@ const Menu = () => {
                               item
                             )
                           }
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-semibold text-[#123d30] transition-colors hover:bg-[#f0e0c7] hover:text-[#123d30]"
+                          className="home-icon-button flex h-8 w-8 items-center justify-center rounded-full text-lg font-semibold transition-colors"
                           aria-label="Decrease quantity"
                         >
                           −
@@ -616,7 +616,7 @@ const Menu = () => {
                               item
                             )
                           }
-                          className="w-8 h-8 flex items-center justify-center text-[#123d30] hover:text-[#1d4d3e] text-lg font-semibold transition-colors"
+                          className="home-icon-button flex h-8 w-8 items-center justify-center rounded-full text-lg font-semibold transition-colors"
                           aria-label="Increase quantity"
                         >
                           +
@@ -632,7 +632,7 @@ const Menu = () => {
                             item
                           )
                         }
-                        className="rounded-xl bg-gradient-to-r from-[#123d30] to-[#2d6756] px-5 py-2 text-sm font-bold text-[#f7f1e7] shadow-md shadow-[#d9a74a]/20 transition hover:from-[#0d2d22] hover:to-[#1d4d3e] active:scale-95"
+                        className="home-primary-button rounded-xl px-5 py-2 text-sm font-bold shadow-md shadow-orange-200 transition active:scale-95"
                       >
                         ADD +
                       </button>
@@ -673,7 +673,7 @@ const Menu = () => {
 
               setSearchQuery("");
             }}
-            className="mt-3 text-sm text-[#123d30] hover:text-[#1d4d3e] font-semibold underline"
+            className="home-secondary-button mt-3 rounded-xl border px-4 py-2 text-sm font-semibold transition"
           >
             Clear Search &
             Filters
@@ -790,7 +790,7 @@ const Menu = () => {
                         "/cart"
                       )
                     }
-                    className="bg-gradient-to-r from-[#123d30] to-[#2d6756] hover:from-[#0d2d22] hover:to-[#1d4d3e] text-white font-black text-xs sm:text-sm px-4 sm:px-6 py-3 rounded-xl shadow-lg active:scale-95 transition-all"
+                    className="home-primary-button rounded-xl px-4 py-3 text-xs font-black shadow-lg transition-all active:scale-95 sm:px-6 sm:text-sm"
                   >
 
                     <span className="sm:hidden">

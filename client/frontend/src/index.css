@@ -21,9 +21,57 @@ a.active hr {
   --brand-red: #c75b3a;
   --brand-gray-soft: #6f7a67;
   --brand-orange: #d98f2b;
+  --brand-action-orange: #f97316;
+  --brand-action-orange-dark: #c2410c;
   --brand-peach: #f9ebd6;
   --brand-teal: #1a5e4f;
   --brand-mustard: #d7a64d;
+}
+
+.home-primary-button {
+  border-color: transparent;
+  background: linear-gradient(90deg, var(--brand-action-orange), #ea580c);
+  color: var(--brand-ivory);
+}
+
+.home-primary-button:hover {
+  background: linear-gradient(90deg, #ea580c, var(--brand-action-orange-dark));
+}
+
+.home-secondary-button {
+  border-color: rgba(249, 115, 22, 0.4);
+  background-color: #ffedd5;
+  color: var(--brand-action-orange-dark);
+}
+
+.home-secondary-button:hover {
+  background-color: #fed7aa;
+}
+
+.home-icon-button {
+  border-color: rgba(249, 115, 22, 0.4);
+  background-color: #fff7ed;
+  color: var(--brand-action-orange-dark);
+}
+
+.home-icon-button:hover {
+  background-color: #ffedd5;
+}
+
+.home-pagination-dot {
+  background-color: rgba(249, 115, 22, 0.3);
+}
+
+.home-pagination-dot[aria-current="true"] {
+  background-color: var(--brand-action-orange);
+}
+
+.home-pagination-dot-on-dark {
+  background-color: rgba(255, 255, 255, 0.65);
+}
+
+.home-pagination-dot-on-dark[aria-current="true"] {
+  background-color: var(--brand-action-orange);
 }
 
 * {
