@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "install": "^0.13.0",
+    "lucide": "^1.77.0",
+    "lucide-react": "^1.77.0",
+    "npm": "^9.6.2"
+  }
+}

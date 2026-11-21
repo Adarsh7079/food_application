@@ -440,7 +440,7 @@ const PlaceOrder = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-full bg-[#123d30] px-10 py-3 text-sm font-bold text-white transition hover:bg-[#2d6756] disabled:cursor-wait disabled:opacity-60 sm:px-16"
+                className="home-primary-button rounded-full px-10 py-3 text-sm font-bold transition disabled:cursor-wait disabled:opacity-60 sm:px-16"
               >
                 {isSubmitting ? "PLACING ORDER..." : "PLACE COD ORDER"}
               </button>
@@ -452,7 +452,7 @@ const PlaceOrder = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/menu")}
-                  className="rounded-full bg-[#123d30] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#2d6756]"
+                  className="home-primary-button rounded-full px-8 py-3 text-sm font-bold transition"
                 >
                   Browse menu
                 </button>

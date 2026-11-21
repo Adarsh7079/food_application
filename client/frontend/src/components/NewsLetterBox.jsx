@@ -14,17 +14,17 @@ const NewsLetterBox = () => {
       </p>
       <form
         onSubmit={onSubmitHandler}
-        className="mx-auto my-6 flex w-full max-w-xl flex-col gap-3 rounded-full bg-white p-2 sm:flex-row"
+        className="mx-auto my-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:rounded-full sm:bg-white sm:p-2"
       >
         <input
-          className="w-full rounded-full px-4 py-3 text-gray-700 outline-none"
+          className="min-w-0 w-full rounded-xl bg-white px-4 py-3 text-gray-700 outline-none sm:flex-1 sm:rounded-full sm:bg-transparent"
           type="email"
           placeholder="Enter your email"
           required
         />
         <button
           type="submit"
-          className="rounded-full bg-[#0d2d22] px-6 py-3 text-sm font-semibold text-[#f8eed8] transition hover:bg-[#123d30]"
+          className="home-primary-button w-full whitespace-nowrap rounded-xl px-6 py-3 text-sm font-semibold transition sm:w-auto sm:rounded-full"
         >
           Subscribe
         </button>

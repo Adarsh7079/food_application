@@ -46,7 +46,7 @@ const App = () => {
   ];
 
   return (
-    <div className="px-0 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
+    <div className="min-h-screen px-0 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <ToastContainer
         position="top-right"
         autoClose={3500}

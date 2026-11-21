@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ShopContext } from "../context/ShopContextContext";
 import ProductDetailsModal from "../components/ProductDetailsModal";
 import {
@@ -26,7 +27,8 @@ const bannerOffers = [
     title: "First Order: 25% OFF",
     subtitle: "On orders above ₹499",
     code: "WELCOME25",
-    foodItemId: "1",
+    foodItemId: "1401",
+    image: "/food/bhindi_roti.png",
   },
 
   {
@@ -34,7 +36,8 @@ const bannerOffers = [
     title: "Weekend Thali Offer",
     subtitle: "Flat 15% discount",
     code: "WEEKEND15",
-    foodItemId: "3",
+    foodItemId: "1405",
+    image: "/food/aloo_pratha.png",
   },
 
   // {
@@ -76,6 +79,7 @@ const SpecialOffers = () => {
   }, {});
   const categoryNames = Object.keys(groupedFoodItems);
   const [selectedCategory, setSelectedCategory] = useState(categoryNames[0] || "");
+  const categoryListRef = useRef(null);
   const activeCategory = categoryNames.includes(selectedCategory)
     ? selectedCategory
     : categoryNames[0];
@@ -84,6 +88,14 @@ const SpecialOffers = () => {
     id: item._id,
     image: Array.isArray(item.image) ? item.image[0] : item.image,
   }));
+  const scrollCategories = (direction) => {
+    const categoryList = categoryListRef.current;
+    if (!categoryList) return;
+    categoryList.scrollBy({
+      left: direction * categoryList.clientWidth * 0.8,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     if (isCarouselPaused) {
@@ -194,12 +206,12 @@ const SpecialOffers = () => {
     );
 
   return (
-    <section className="relative isolate -mx-4 w-[calc(100%+2rem)] overflow-hidden  px-4 py-8 sm:-mx-[5vw] sm:w-[calc(100%+10vw)] sm:px-[5vw] md:-mx-[7vw] md:w-[calc(100%+14vw)] md:px-[7vw] lg:-mx-[9vw] lg:w-[calc(100%+18vw)] lg:px-[9vw] sm:py-12 pb-32">
+    <section className="relative isolate -mx-4 w-[calc(100%+2rem)] overflow-hidden px-4 py-8 sm:-mx-[5vw] sm:w-[calc(100%+10vw)] sm:px-[5vw] md:-mx-[7vw] md:w-[calc(100%+14vw)] md:px-[7vw] lg:-mx-[9vw] lg:w-[calc(100%+18vw)] lg:px-[9vw] sm:py-12 pb-32">
 
-      <div className="relative mx-auto max-w-6xl space-y-12">
+      <div className="relative mx-auto max-w-6xl space-y-10 sm:space-y-14">
 
         <div
-          className="relative isolate min-h-[340px] overflow-hidden rounded-3xl bg-[#123d30] shadow-[0_22px_55px_-28px_rgba(18,61,48,0.55)] sm:min-h-[400px]"
+          className="relative isolate min-h-[300px] overflow-hidden rounded-3xl bg-[#123d30] shadow-[0_18px_45px_-24px_rgba(18,61,48,0.35)] sm:min-h-[360px]"
           aria-roledescription="carousel"
           aria-label="Current food offers"
           onMouseEnter={() => setIsCarouselPaused(true)}
@@ -216,13 +228,16 @@ const SpecialOffers = () => {
                 src={offer.image}
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#0d2d22]/95 via-[#123d30]/75 to-[#123d30]/10" />
-              <div className="relative flex min-h-[340px] max-w-xl flex-col items-start justify-center px-6 py-12 text-[#fffaf2] sm:min-h-[400px] sm:px-12 lg:px-16">
-                <span className="mb-5 rounded-full border border-[#f3d7a1]/40 bg-[#f3d7a1]/15 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#f3d7a1]">
+              <div className="relative flex min-h-[300px] max-w-xl flex-col items-start justify-center px-6 py-10 text-[#fffaf2] sm:min-h-[360px] sm:px-12 lg:px-16">
+                <span className="mb-4 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
                   Limited-time offer · {offer.code}
                 </span>
-                <h2 className="max-w-lg font-serif text-4xl font-bold leading-tight sm:text-5xl">
+                <h2 className="max-w-lg text-3xl font-extrabold leading-tight sm:text-5xl">
                   {offer.title}
                 </h2>
                 <p className="mt-3 text-base text-[#fffaf2]/85 sm:text-lg">
@@ -231,7 +246,7 @@ const SpecialOffers = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/menu")}
-                  className="mt-7 rounded-xl bg-[#f3d7a1] px-6 py-3 text-sm font-bold text-[#123d30] shadow-lg transition hover:bg-[#d9a74a] active:scale-95"
+                  className="home-primary-button mt-6 rounded-xl px-6 py-3 text-sm font-bold shadow-lg transition active:scale-95"
                 >
                   Explore the menu
                 </button>
@@ -243,7 +258,7 @@ const SpecialOffers = () => {
             <button
               type="button"
               onClick={() => showOffer(activeOffer - 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-[#123d30]/70 text-lg text-white backdrop-blur transition hover:bg-[#123d30]"
+              className="home-secondary-button flex h-10 w-10 items-center justify-center rounded-full border text-lg backdrop-blur transition"
               aria-label="Previous offer"
             >
               &#8592;
@@ -253,7 +268,7 @@ const SpecialOffers = () => {
                 key={offer.id}
                 type="button"
                 onClick={() => showOffer(index)}
-                className={`h-2.5 rounded-full transition-all ${index === activeOffer ? "w-7 bg-[#f3d7a1]" : "w-2.5 bg-white/65 hover:bg-white"}`}
+                className={`home-pagination-dot home-pagination-dot-on-dark h-2.5 rounded-full transition-all ${index === activeOffer ? "w-7" : "w-2.5 hover:bg-white"}`}
                 aria-label={`Show offer ${index + 1}: ${offer.title}`}
                 aria-current={index === activeOffer ? "true" : undefined}
               />
@@ -261,7 +276,7 @@ const SpecialOffers = () => {
             <button
               type="button"
               onClick={() => showOffer(activeOffer + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-[#123d30]/70 text-lg text-white backdrop-blur transition hover:bg-[#123d30]"
+              className="home-secondary-button flex h-10 w-10 items-center justify-center rounded-full border text-lg backdrop-blur transition"
               aria-label="Next offer"
             >
               &#8594;
@@ -275,11 +290,11 @@ const SpecialOffers = () => {
 
         <div className="text-center">
 
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#123d30] bg-[#d9a74a]/10 px-4 py-1.5 rounded-full border border-[#d9a74a]/30 mb-3">
+          <span className="mb-3 inline-block rounded-full border border-[#fc8019]/20 bg-[#fc8019]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#b84e00]">
             Indian Rasoi Specials
           </span>
 
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight font-serif">
+          <h2 className="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">
             Our Special Offers
           </h2>
 
@@ -289,7 +304,7 @@ const SpecialOffers = () => {
             CIRCULAR OFFERS
         ================================================== */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
 
           {circularOffers.map(
             (item) => {
@@ -300,7 +315,7 @@ const SpecialOffers = () => {
               return (
                 <div
                   key={item.id}
-                  className="group relative bg-gradient-to-b from-[#fffaf2] via-[#f6eedb] to-[#f2e7cf] border border-[#d9a74a]/35 rounded-3xl p-6 flex flex-col items-center text-center shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 overflow-hidden"
+                  className="group relative flex flex-col items-center overflow-hidden rounded-3xl border border-[#d9c4a2] bg-[#f2e7cf] p-5 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#fc8019]/40 hover:shadow-lg sm:p-6"
                 >
 
                   <div className="absolute inset-x-8 top-0 h-px bg-[#d9a74a]/40" />
@@ -314,7 +329,7 @@ const SpecialOffers = () => {
                     className={`relative mb-4 rounded-full bg-gradient-to-tr p-[3px] shadow-md ${item.gradient}`}
                   >
 
-                    <div className="bg-white p-1 rounded-full">
+                    <div className="rounded-full bg-[#f6eedb] p-1">
 
                       <img
                         src={item.image}
@@ -369,7 +384,7 @@ const SpecialOffers = () => {
                               item
                             )
                           }
-                          className="w-7 h-7 flex items-center justify-center text-[#123d30] hover:text-[#2d6756] text-lg font-semibold transition-colors"
+                          className="home-icon-button flex h-7 w-7 items-center justify-center rounded-full text-lg font-semibold transition-colors"
                           aria-label="Decrease quantity"
                         >
                           −
@@ -389,7 +404,7 @@ const SpecialOffers = () => {
                               item
                             )
                           }
-                          className="w-7 h-7 flex items-center justify-center text-[#123d30] hover:text-[#2d6756] text-lg font-semibold transition-colors"
+                          className="home-icon-button flex h-7 w-7 items-center justify-center rounded-full text-lg font-semibold transition-colors"
                           aria-label="Increase quantity"
                         >
                           +
@@ -405,7 +420,7 @@ const SpecialOffers = () => {
                             item
                           )
                         }
-                        className="text-sm font-bold border border-[#d9a74a]/40 bg-gradient-to-r from-[#123d30] to-[#2d6756] text-[#fffaf2] px-5 py-2.5 rounded-xl shadow-md transition hover:from-[#0d2d22] hover:to-[#1d4d3e] active:scale-95"
+                        className="home-primary-button text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition active:scale-95"
                       >
                         ADD +
                       </button>
@@ -487,69 +502,103 @@ const SpecialOffers = () => {
             <button
               type="button"
               onClick={() => navigate("/menu")}
-              className="self-start text-sm font-bold text-[#123d30] underline decoration-[#d9a74a] decoration-2 underline-offset-4 transition hover:text-[#2d6756] sm:self-auto"
+              className="home-secondary-button self-start rounded-xl border px-4 py-2 text-sm font-bold transition sm:self-auto"
             >
               See full menu
             </button>
           </div>
 
-          <div className="mb-6 flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Food categories">
-            {categoryNames.map((category) => (
-              <button
-                key={category}
-                type="button"
-                role="tab"
-                aria-selected={activeCategory === category}
-                onClick={() => setSelectedCategory(category)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${activeCategory === category ? "border-[#123d30] bg-[#123d30] text-[#fffaf2]" : "border-[#d9c9ab] bg-[#fffaf2] text-[#365548] hover:border-[#2d6756]"}`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="mb-6 flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollCategories(-1)}
+              aria-label="Previous food categories"
+              aria-controls="food-category-tabs"
+              className="home-icon-button grid h-9 w-9 shrink-0 place-items-center rounded-full border text-lg font-bold transition"
+            >
+              ‹
+            </button>
+            <div
+              ref={categoryListRef}
+              id="food-category-tabs"
+              className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth pb-2"
+              role="tablist"
+              aria-label="Food categories"
+            >
+              {categoryNames.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeCategory === category}
+                  onClick={(event) => {
+                    setSelectedCategory(category);
+                    event.currentTarget.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+                  }}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${activeCategory === category ? "home-primary-button" : "home-secondary-button"}`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollCategories(1)}
+              aria-label="Next food categories"
+              aria-controls="food-category-tabs"
+              className="home-icon-button grid h-9 w-9 shrink-0 place-items-center rounded-full border text-lg font-bold transition"
+            >
+              ›
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-5" role="tabpanel">
+          <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4" role="tabpanel">
             {categoryProducts.map((item) => (
               <article
                 key={item._id}
-                className="group overflow-hidden rounded-2xl border border-[#d9c9ab]/70 bg-[#fffaf2] shadow-sm transition hover:-translate-y-1 hover:border-[#d9a74a]/60 hover:shadow-lg"
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#d9c4a2] bg-[#f2e7cf] shadow-sm transition hover:-translate-y-1 hover:border-[#fc8019]/50 hover:shadow-lg"
               >
                 <button
                   type="button"
                   onClick={() => setSelectedProduct(item)}
-                  className="block w-full text-left"
+                  className="flex flex-1 flex-col text-left"
                   aria-label={`View details for ${item.name}`}
                 >
-                  <div className="aspect-4/3 overflow-hidden bg-[#f2e7cf]">
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-[#f7f5f2]">
                     {item.image ? (
                       <img
                         src={item.image}
                         alt={item.name}
                         loading="lazy"
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                          event.currentTarget.nextElementSibling?.classList.remove("hidden");
+                        }}
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-4xl" aria-hidden="true">🍲</div>
                     )}
+                    {item.image && <div className="hidden h-full items-center justify-center text-4xl" aria-hidden="true">🍲</div>}
                   </div>
-                  <div className="px-3 pt-3 sm:px-4">
+                  <div className="flex flex-1 flex-col px-3 pt-3 sm:px-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="line-clamp-2 text-sm font-bold text-[#123d30] sm:text-base">
                         {item.name}
                       </h3>
                       {item.ratingCount > 0 && <span className="shrink-0 text-xs font-bold text-[#9a702d]">★ {item.rating} ({item.ratingCount})</span>}
                     </div>
-                    <p className="mt-1 line-clamp-2 min-h-9 text-xs leading-4 text-[#617168]">
+                    <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-[#617168]">
                       {item.description || "Freshly prepared with carefully selected ingredients."}
                     </p>
                   </div>
                 </button>
-                <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-2 sm:px-4 sm:pb-4">
+                <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-3 pt-3 sm:px-4 sm:pb-4">
                   <span className="text-sm font-black text-[#123d30]">₹{item.price}</span>
                   <button
                     type="button"
                     onClick={() => handleAddToCart(item)}
-                    className="rounded-lg bg-[#123d30] px-3 py-2 text-xs font-bold text-[#fffaf2] transition hover:bg-[#2d6756] active:scale-95"
+                    className="home-primary-button rounded-lg px-3 py-2 text-xs font-bold transition active:scale-95"
                   >
                     Add +
                   </button>
@@ -565,19 +614,19 @@ const SpecialOffers = () => {
 
         <div>
 
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center justify-between">
 
             <h3 className="text-xl font-bold text-stone-900">
               Popular Dishes
             </h3>
 
-            <button className="text-xs font-bold text-[#123d30] bg-[#f3d7a1]/35 px-3.5 py-2 rounded-xl border border-[#d9a74a]/35 hover:bg-[#f3d7a1]/60 transition-colors">
+            <button className="home-secondary-button rounded-xl border px-3.5 py-2 text-xs font-bold transition-colors">
               View All ({regularItems.length})
             </button>
 
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
+          <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-6">
 
             {regularItems.map(
               (item) => {
@@ -590,7 +639,7 @@ const SpecialOffers = () => {
                 return (
                   <div
                     key={item.id}
-                    className="group bg-[#fffaf2]/85 rounded-2xl p-3 border border-[#d9a74a]/25 hover:border-[#d9a74a]/60 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center"
+                    className="group flex h-full flex-col items-center rounded-2xl border border-[#d9c4a2] bg-[#f2e7cf] p-3 text-center shadow-sm transition-all duration-300 hover:border-[#fc8019]/40 hover:shadow-lg"
                   >
 
                     {/* IMAGE */}
@@ -635,7 +684,7 @@ const SpecialOffers = () => {
 
                     {/* PRICE + QUANTITY */}
 
-                    <div className="w-full mt-3 pt-2 border-t border-[#d9a74a]/25 flex items-center justify-between gap-2">
+                    <div className="mt-auto flex w-full items-center justify-between gap-2 border-t border-[#f0ece7] pt-3">
 
                       <span className="font-black text-sm text-stone-900">
                         ₹{item.price}
@@ -653,7 +702,7 @@ const SpecialOffers = () => {
                                 item
                               )
                             }
-                            className="w-6 h-6 flex items-center justify-center text-[#123d30] hover:text-[#2d6756] text-base font-semibold transition-colors"
+                            className="home-icon-button flex h-6 w-6 items-center justify-center rounded-full text-base font-semibold transition-colors"
                             aria-label="Decrease quantity"
                           >
                             −
@@ -669,7 +718,7 @@ const SpecialOffers = () => {
                                 item
                               )
                             }
-                            className="w-6 h-6 flex items-center justify-center text-[#123d30] hover:text-[#2d6756] text-base font-semibold transition-colors"
+                            className="home-icon-button flex h-6 w-6 items-center justify-center rounded-full text-base font-semibold transition-colors"
                             aria-label="Increase quantity"
                           >
                             +
@@ -685,7 +734,7 @@ const SpecialOffers = () => {
                               item
                             )
                           }
-                          className="text-[11px] font-bold bg-gradient-to-r from-[#123d30] to-[#2d6756] text-[#fffaf2] px-2.5 py-1.5 rounded-lg hover:from-[#0d2d22] hover:to-[#1d4d3e] active:scale-95 transition-all"
+                          className="home-primary-button rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all active:scale-95"
                         >
                           ADD +
                         </button>
@@ -710,9 +759,9 @@ const SpecialOffers = () => {
       ================================================== */}
 
       {totalCartItems > 0 &&
-        cartPopupItem && (
-
-          <div className="fixed bottom-24 left-3 right-3 z-[100] sm:left-1/2 sm:w-[720px] sm:-translate-x-1/2 md:bottom-4">
+        cartPopupItem &&
+        createPortal(
+          <div className="fixed bottom-24 left-3 right-3 z-[1200] sm:left-1/2 sm:w-[720px] sm:-translate-x-1/2 md:bottom-4">
 
             <div className="bg-[#0d2d22]/95 backdrop-blur-xl border border-[#d9a74a]/40 shadow-2xl rounded-2xl p-3 sm:p-4">
 
@@ -787,7 +836,7 @@ const SpecialOffers = () => {
                     onClick={() =>
                       navigate("/cart")
                     }
-                    className="bg-gradient-to-r from-[#123d30] to-[#2d6756] hover:from-[#0d2d22] hover:to-[#1d4d3e] text-[#fffaf2] font-black text-xs sm:text-sm px-4 sm:px-6 py-3 rounded-xl shadow-lg active:scale-95 transition-all"
+                    className="home-primary-button rounded-xl px-4 py-3 text-xs font-black shadow-lg transition-all active:scale-95 sm:px-6 sm:text-sm"
                   >
 
                     <span className="sm:hidden">
@@ -807,8 +856,8 @@ const SpecialOffers = () => {
 
             </div>
 
-          </div>
-
+          </div>,
+          document.body,
         )}
 
       <ProductDetailsModal

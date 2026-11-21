@@ -74,14 +74,14 @@ const MultiCardCarousel = ({ items = [], interval = 3500 }) => {
           <button
             aria-label="Previous"
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-md hover:bg-white"
+            className="home-icon-button absolute left-2 top-1/2 -translate-y-1/2 rounded-full border p-2 shadow-md"
           >
             ‹
           </button>
           <button
             aria-label="Next"
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-md hover:bg-white"
+            className="home-icon-button absolute right-2 top-1/2 -translate-y-1/2 rounded-full border p-2 shadow-md"
           >
             ›
           </button>
@@ -91,8 +91,9 @@ const MultiCardCarousel = ({ items = [], interval = 3500 }) => {
               <button
                 key={i}
                 onClick={() => setIndex(i)}
-                className={`h-2 w-8 rounded-full ${i === index ? "bg-orange-500" : "bg-gray-300"}`}
+                className="home-pagination-dot h-2 w-8 rounded-full"
                 aria-label={`Go to slide ${i + 1}`}
+                aria-current={i === index ? "true" : undefined}
               />
             ))}
           </div>

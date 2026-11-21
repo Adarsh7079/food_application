@@ -15,7 +15,7 @@ const TiffinService = () => {
             Subscribe to our weekly or monthly meal plans. Fresh, hygienic, and home-style cooked North & South Indian meals delivered right to your office or home.
           </p>
           <div className="mt-6 flex flex-wrap gap-4 items-center">
-            <button className="bg-linear-to-r from-[#d9a74a] to-[#f3d7a1] hover:from-[#c78c28] hover:to-[#ebc97c] text-[#123d30] font-bold text-sm px-6 py-3 rounded-xl shadow-md transition-all active:scale-95">
+            <button className="home-primary-button text-sm font-bold px-6 py-3 rounded-xl shadow-md transition-all active:scale-95">
               Explore Meal Plans
             </button>
             <span className="text-xs font-semibold text-[#f3d7a1]">

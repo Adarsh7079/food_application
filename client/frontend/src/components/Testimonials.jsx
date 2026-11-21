@@ -42,25 +42,26 @@ const Testimonials = () => {
 
   const prev = () => setIndex((current) => (current - 1 + testimonials.length) % testimonials.length);
   const next = () => setIndex((current) => (current + 1) % testimonials.length);
+  const testimonial = testimonials[index];
 
   return (
-    <section className="my-16 px-4 max-w-4xl mx-auto">
+    <section className="mx-auto my-12 w-full max-w-4xl px-1 sm:my-16 sm:px-4">
       {/* Header */}
       <div className="text-center mb-10">
-        <span className="inline-block text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-500/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-amber-500/20 shadow-xs mb-3">
+        <span className="mb-3 inline-block rounded-full border border-[#fc8019]/20 bg-[#fc8019]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#b84e00]">
           Customer Stories
         </span>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight font-serif">
+        <h2 className="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">
           What Our Foodies Say
         </h2>
       </div>
 
       {/* Main Glass Card */}
-      <div className="relative bg-amber-50/40 backdrop-blur-md border border-amber-200/60 rounded-3xl p-6 sm:p-10 shadow-lg overflow-hidden">
+      <div className="relative rounded-3xl border border-[#d9c4a2] bg-[#f2e7cf] p-5 shadow-sm sm:p-8">
         
         {/* Navigation & Dish Tag Top Row */}
         <div className="flex items-center justify-between mb-8 gap-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-200/60 backdrop-blur-xs px-3 py-1 rounded-full border border-amber-300/50">
+          <span className="max-w-[65%] rounded-full bg-[#fff3e8] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#9a470b]">
             {testimonials[index].dish}
           </span>
 
@@ -68,14 +69,14 @@ const Testimonials = () => {
             <button
               onClick={prev}
               aria-label="Previous testimonial"
-              className="w-10 h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-800 border border-amber-500/20 backdrop-blur-md flex items-center justify-center font-bold text-lg transition-all shadow-2xs"
+              className="home-icon-button flex h-10 w-10 items-center justify-center rounded-xl border font-bold text-lg shadow-sm transition active:scale-95"
             >
               ‹
             </button>
             <button
               onClick={next}
               aria-label="Next testimonial"
-              className="w-10 h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-800 border border-amber-500/20 backdrop-blur-md flex items-center justify-center font-bold text-lg transition-all shadow-2xs"
+              className="home-icon-button flex h-10 w-10 items-center justify-center rounded-xl border font-bold text-lg shadow-sm transition active:scale-95"
             >
               ›
             </button>
@@ -83,59 +84,46 @@ const Testimonials = () => {
         </div>
 
         {/* Dynamic Testimonial Display */}
-        <div className="relative min-h-[160px] sm:min-h-[140px] flex items-center">
-          {testimonials.map((t, i) => {
-            const isActive = i === index;
-            return (
-              <div
-                key={t.id}
-                className={`absolute inset-0 flex flex-col justify-between transition-all duration-500 ${
-                  isActive
-                    ? "opacity-100 translate-x-0 pointer-events-auto"
-                    : "opacity-0 translate-x-6 pointer-events-none"
-                }`}
-              >
+        <div className="min-h-[270px] sm:min-h-[230px]">
+          <div key={testimonial.id} className="flex min-h-[270px] flex-col sm:min-h-[230px]">
                 {/* Rating Stars */}
-                <div className="flex gap-1 text-green-600 text-sm mb-3">
-                  {[...Array(t.rating)].map((_, starIndex) => (
-                    <span key={starIndex}>★</span>
+                <div className="mb-3 flex gap-1 text-sm text-[#168044]" aria-label={`${testimonial.rating} out of 5 stars`}>
+                  {[...Array(testimonial.rating)].map((_, starIndex) => (
+                    <span key={starIndex} aria-hidden="true">★</span>
                   ))}
                 </div>
 
                 {/* Review Quote */}
-                <p className="text-lg sm:text-xl font-medium text-stone-800 leading-relaxed font-serif italic">
-                  “{t.text}”
+                <p className="text-lg font-medium italic leading-relaxed text-stone-800 sm:text-xl">
+                  “{testimonial.text}”
                 </p>
 
                 {/* User Bio */}
-                <div className="mt-6 flex items-center gap-3">
+                <div className="mt-auto flex items-center gap-3 border-t border-[#f0ece7] pt-5">
                   <img
-                    src={t.avatar}
-                    alt={t.name}
-                    className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-400/80 shadow-md"
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-[#f3d7a1]"
                   />
                   <div>
-                    <h4 className="font-bold text-sm text-stone-900">{t.name}</h4>
-                    <p className="text-xs text-amber-800/80 font-medium">{t.role}</p>
+                    <h4 className="text-sm font-bold text-stone-900">{testimonial.name}</h4>
+                    <p className="text-xs font-medium text-[#68756d]">{testimonial.role}</p>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+          </div>
         </div>
 
         {/* Carousel Indicators */}
-        <div className="mt-8 pt-4 border-t border-amber-200/40 flex justify-center gap-2">
+        <div className="mt-5 flex justify-center gap-2 border-t border-[#f0ece7] pt-4">
           {testimonials.map((_, i) => (
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === index
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 w-8"
-                  : "bg-amber-300/50 hover:bg-amber-400/60 w-2"
+              className={`home-pagination-dot h-2 rounded-full transition-all duration-300 ${
+                i === index ? "w-8" : "w-2"
               }`}
               aria-label={`Go to testimonial ${i + 1}`}
+              aria-current={i === index ? "true" : undefined}
             />
           ))}
         </div>

@@ -16,8 +16,8 @@ const ProductItem = ({ id, image, name, price, description, rating, ratingCount 
   };
 
   return (
-    <div className="group block text-stone-700">
-      <div className="overflow-hidden rounded-[2rem] border border-[#d9c9ab] bg-[#fffdf8] shadow-[0_18px_45px_-30px_rgba(18,61,48,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-[#123d30]/40 hover:shadow-[0_24px_55px_-28px_rgba(18,61,48,0.42)]">
+    <div className="group h-full text-stone-700">
+      <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-[#d9c4a2] bg-[#f2e7cf] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#fc8019]/40 hover:shadow-lg">
         <button
           type="button"
           onClick={() => setShowDetails(true)}
@@ -26,7 +26,7 @@ const ProductItem = ({ id, image, name, price, description, rating, ratingCount 
         >
           {mainSrc && !imgError ? (
             <img
-              className="h-52 w-full object-cover transition duration-500 group-hover:scale-105"
+              className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
               src={mainSrc}
               alt={name || "Dish image"}
               onError={() => setImgError(true)}
@@ -36,7 +36,7 @@ const ProductItem = ({ id, image, name, price, description, rating, ratingCount 
             <div
               role="img"
               aria-label={name || "No image available"}
-              className="flex h-52 items-center justify-center bg-gradient-to-br from-[#f7f1e7] to-[#e8d7b5] text-stone-600"
+              className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-[#f7f1e7] to-[#e8d7b5] text-stone-600"
             >
               <div className="text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-10 w-10 text-[#123d30]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,18 +46,18 @@ const ProductItem = ({ id, image, name, price, description, rating, ratingCount 
               </div>
             </div>
           )}
-          <span className="absolute left-4 top-4 rounded-full border border-[#d9c9ab] bg-[#f7f1e7]/95 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#123d30] shadow-sm">
+          <span className="absolute left-3 top-3 rounded-full bg-[#f6eedb]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#b84e00] shadow-sm">
             Popular
           </span>
         </button>
-        <div className="space-y-3 p-5">
+        <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
           <button
             type="button"
             onClick={() => setShowDetails(true)}
             className="block w-full text-left"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold text-stone-900">{name}</p>
+              <p className="line-clamp-2 min-h-14 text-base font-bold text-stone-900">{name}</p>
               {ratingCount > 0 && (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-bold text-green-700 ring-1 ring-green-200">
                   <span aria-hidden="true">★</span>
@@ -69,15 +69,15 @@ const ProductItem = ({ id, image, name, price, description, rating, ratingCount 
               {description || "Freshly prepared with carefully selected ingredients."}
             </p>
           </button>
-          <div className="flex items-center justify-between gap-3">
-            <span className="rounded-full bg-[#123d30] px-4 py-2 text-sm font-bold text-[#f7f1e7] shadow-md shadow-stone-200">
+          <div className="mt-auto flex items-center justify-between gap-3 pt-2">
+            <span className="home-primary-button rounded-full px-4 py-2 text-sm font-bold shadow-md shadow-orange-200">
               {currency}
               {price}
             </span>
             <button
               type="button"
               onClick={handleAddToCart}
-              className="rounded-full bg-gradient-to-r from-[#123d30] to-[#2d6756] px-5 py-2 text-sm font-bold text-[#f7f1e7] shadow-md shadow-[#d9a74a]/20 transition hover:from-[#0d2d22] hover:to-[#1d4d3e]"
+              className="home-primary-button whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold shadow-md shadow-[#d9a74a]/20 transition"
             >
               Add to cart
             </button>

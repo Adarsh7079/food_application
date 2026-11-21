@@ -21,7 +21,7 @@ const HygieneBanner = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {highlights.map((h, i) => (
-            <div key={i} className="flex items-center gap-4 bg-white/60 p-4 rounded-2xl border border-amber-200/40">
+            <div key={i} className="flex items-center gap-4 bg-[#f2e7cf]/80 p-4 rounded-2xl border border-amber-200/40">
               <span className="text-3xl">{h.icon}</span>
               <div>
                 <h4 className="font-bold text-sm text-stone-900">{h.title}</h4>
